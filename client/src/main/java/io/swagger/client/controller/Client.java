@@ -14,8 +14,8 @@ public class Client {
   private static long threadEndTime;
 
   public static void main(String[] args) throws InterruptedException {
-    // TODO: Read in the parameters -> how? just parse thru args?
-
+    // TODO: Read in the parameters -> how? just parse thru args? For now, I'm just manually gonna set it
+    maxStores = 256; // Run with 32, 64, 128, 256 threads
     // create the global counter
     purchaseCounter = new PurchaseCounter();
     badPurchaseCounter = new PurchaseCounter();
@@ -61,25 +61,26 @@ public class Client {
     closeSignal.await();
     // take timestamp
     threadEndTime = System.currentTimeMillis();
-    System.out.println();
+    System.out.println(report());
   }
 
   private static String report() {
     StringBuilder reportBuilder = new StringBuilder();
-    reportBuilder.append("total number of successful requests: " + purchaseCounter.getCount());
+    reportBuilder.append("number of stores: " + maxStores);
+    reportBuilder.append("\ntotal number of successful requests: " + purchaseCounter.getCount());
     // TODO: Figure out a way to keep track of number of requests
-    reportBuilder.append("\ntotal number of unsuccessful requests: " + (10000 - purchaseCounter.getCount()));
-    reportBuilder.append("\ntotal wall time: " + calculateWallTime());
-    reportBuilder.append("\nthroughput: " + calculateThroughput(purchaseCounter.getCount(), calculateWallTime()));
+    reportBuilder.append("\ntotal number of unsuccessful requests: " + (badPurchaseCounter.getCount()));
+    reportBuilder.append("\ntotal wall time (sec): " + calculateWallTime());
+    reportBuilder.append("\nthroughput (requests/sec): " + calculateThroughput(purchaseCounter.getCount(), calculateWallTime()));
     return reportBuilder.toString();
   }
 
   private static long calculateWallTime() {
     // timestamps are in milliseconds, convert to seconds
-    return (threadEndTime - threadStartTime) % 1000;
+    return ((threadEndTime - threadStartTime) / 1000);
   }
 
-  private static long calculateThroughput(int numRequest, long wallTime) {
+  private static double calculateThroughput(int numRequest, long wallTime) {
     return numRequest/wallTime;
   }
 

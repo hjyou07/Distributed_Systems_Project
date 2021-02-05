@@ -40,7 +40,6 @@ public class Store implements Runnable {
   @Override
   public void run() {
     ApiClient apiClient = new ApiClient();
-    System.out.println("serverAddress var: " + serverAddress);
     apiClient.setBasePath(serverAddress);
     // pass in an ApiClient instance that connects to my server
     PurchaseApi apiInstance = new PurchaseApi(apiClient);
