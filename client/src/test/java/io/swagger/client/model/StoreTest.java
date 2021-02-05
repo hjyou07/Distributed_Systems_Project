@@ -28,6 +28,8 @@ public class StoreTest {
     store.setServerAddress("http://localhost:8080/a1_war_exploded");
   }
 
+  /*
+  * To run the test, change the access modifiers in Store.java
   @Test
   public void testCreatePurchaseBody() {
     Purchase body = store.createPurchaseBody();
@@ -66,4 +68,5 @@ public class StoreTest {
     Integer custID = store.randomCustID();
     store.makePOSTRequest(apiInstance, store.createPurchaseBody(), custID);
   }
+  */
 }

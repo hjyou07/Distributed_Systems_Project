@@ -13,9 +13,8 @@ public class Store implements Runnable {
   private static final int START_WEST_PHASE = 5;
 
   private Integer storeID;
-  // TODO: switch back to private after testing
-  protected PurchaseCounter purchaseCounter;
-  protected PurchaseCounter badPurchaseCounter;
+  private PurchaseCounter purchaseCounter;
+  private PurchaseCounter badPurchaseCounter;
   private CountDownLatch centralPhaseSignal;
   private CountDownLatch westPhaseSignal;
   private CountDownLatch closeSignal;
@@ -61,8 +60,7 @@ public class Store implements Runnable {
     closeSignal.countDown();
   }
 
-  // TODO: set it back to private after unit testing
-  public Purchase createPurchaseBody() {
+  private Purchase createPurchaseBody() {
     Purchase body = new Purchase();
     // generate a specified number of purchase items (default=5)
     for (int i=0; i < numPurchaseItems; i++) {
@@ -75,7 +73,7 @@ public class Store implements Runnable {
     return body;
   }
 
-  public void makePOSTRequest(PurchaseApi apiInstance, Purchase body, Integer custID) {
+  private void makePOSTRequest(PurchaseApi apiInstance, Purchase body, Integer custID) {
     try {
       apiInstance.newPurchase(body, storeID, custID, date);
       ApiResponse response = apiInstance.newPurchaseWithHttpInfo(body, storeID, custID, date);
@@ -90,13 +88,13 @@ public class Store implements Runnable {
     }
   }
 
-  public Integer randomCustID() {
+  private Integer randomCustID() {
     Random rand = new Random();
     int custID = rand.nextInt(numCust) + (storeID * 1000);
     return custID;
   }
 
-  public String randomItemID() {
+  private String randomItemID() {
     Random rand = new Random();
     return String.valueOf(rand.nextInt(maxItemID));
   }
