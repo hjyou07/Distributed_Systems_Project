@@ -11,7 +11,7 @@ public class Client {
 
   public static void main(String[] args) throws InterruptedException {
     // TODO: Read in the parameters -> how? just parse thru args? For now, I'm just manually gonna set it
-    maxStores = 32; // Run with 32, 64, 128, 256 threads
+    maxStores = 256; // Run with 32, 64, 128, 256 threads
     // create the global counter
     purchaseCounter = new PurchaseCounter();
     badPurchaseCounter = new PurchaseCounter();

@@ -57,7 +57,7 @@ public class StoreTest {
     System.out.println("west latch should be at 0: " + westPhaseSignal.getCount());
     System.out.println("close latch should be at 0: " + closeSignal.getCount());
   }
-  */
+
   @Test
   public void makePOSTRequest() {
     ApiClient apiClient = new ApiClient();
@@ -66,4 +66,5 @@ public class StoreTest {
     Integer custID = store.randomCustID();
     store.makePOSTRequest(apiInstance, store.createPurchaseBody(), custID);
   }
+  */
 }
