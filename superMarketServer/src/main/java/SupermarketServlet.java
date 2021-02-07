@@ -1,13 +1,12 @@
-import com.google.gson.JsonElement;
-import java.io.BufferedReader;
+import com.google.gson.*;
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.util.stream.Collectors;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import com.google.gson.JsonParser;
 
 @WebServlet(name = "Servlet")
 public class SupermarketServlet extends HttpServlet {
@@ -16,10 +15,6 @@ public class SupermarketServlet extends HttpServlet {
       HttpServletResponse res)
       throws ServletException, IOException {
     // TODO: implement doPost method using similar URL validation and the API spec
-    // the POST method to the same URL accepts a JSON request body. We can parse that information
-    // with req.getReader() method which returns a BufferedReader object.
-    // requestBody is a purchase = an array of items, where each item is something like:
-    // {"itemID": "someString", "numberOfItems": 1}
     res.setContentType("plain/text");
     String urlPath = req.getPathInfo();
 
@@ -44,7 +39,7 @@ public class SupermarketServlet extends HttpServlet {
     BufferedReader reqBodyBuffer = req.getReader();
     // .lines() returns Stream<String>, .collect() returns String,
     // you can pass in an optional param in Collectors.joining() for a separator
-    String reqBody = reqBodyBuffer.lines().collect(Collectors.joining(System.lineSeparator()));
+    String reqBody = reqBodyBuffer.lines().collect(Collectors.joining());
 
     if (reqBody == null || reqBody.isEmpty()) {
       System.out.println("Missing requestBody");
@@ -53,18 +48,21 @@ public class SupermarketServlet extends HttpServlet {
       return;
     }
 
-    if (!isRequestValid(reqBody)) {
+    // now try creating the purchase POJO object from the json string
+    Purchase purchase = readRequestBody(reqBody,res);
+    System.out.println(purchase.itemList.get(0).numberOfItems);
+
+    if (!isRequestValid(purchase)) {
       System.out.println("Bad requestBody");
       res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       res.getWriter().write("Bad requestBody");
     } else {
       res.setStatus(HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
-      res.getWriter().write(String.format("echoing the request body: %s", reqBody));
+      res.getWriter().write(String.format("echoing the request body: %s", purchase.itemList.toString()));
     }
   }
 
   private boolean isUrlValid(String[] urlParts) {
-    // TODO: validate the request url path according to the API specification from Assignment 1
     // urlPath = "/purchase/{storeID}/customer/{custID}/date/yyyymmdd"
     // check for the [, 001, customer, 001, date, 20210101]
     // Stream.of(urlParts).forEach(System.out::println);
@@ -72,12 +70,6 @@ public class SupermarketServlet extends HttpServlet {
       //System.out.println(i);
       switch (i) {
         // actually, I don't really need to check for 0 because servlet mapping specifies /purchase/*
-        case 0:
-          //System.out.println(!urlParts[i].isEmpty());
-          if (!urlParts[i].isEmpty()) {
-            return false;
-          }
-          break;
         case 1: case 3: case 5:
           //System.out.println(urlParts[i]);
           if (!isNumberValid(urlParts[i])) {
@@ -100,12 +92,25 @@ public class SupermarketServlet extends HttpServlet {
     return true;
   }
 
-  private boolean isRequestValid(String reqBody) {
-    // TODO: implement a validation for request body
-    // can I use gson?
-    //JsonElement parseTree = JsonParser.parseString(reqBody);
-    //System.out.println(parseTree.toString());
+  private boolean isRequestValid(Purchase purchase) {
+    // TODO: implement a validation for the Purchase POJO created by request body
+    for (PurchaseItem item : purchase.itemList) {
+      if (item.numberOfItems == 0) {
+        return false;
+      }
+    }
     return true;
+  }
+
+  private Purchase readRequestBody(String reqBody, HttpServletResponse res) throws IOException {
+    try {
+      Purchase purchase = new Gson().fromJson(reqBody, Purchase.class);
+      return purchase;
+    } catch(Exception e) {
+      System.err.println(e.getMessage());
+      res.getWriter().write("Bad requestBody, can't create a Purchase");
+    }
+    return null;
   }
 
   private boolean isNumberValid(String string) {

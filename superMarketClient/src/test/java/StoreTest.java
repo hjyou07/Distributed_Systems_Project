@@ -4,6 +4,7 @@ import io.swagger.client.ApiClient;
 import io.swagger.client.api.PurchaseApi;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Before;
+import org.junit.Test;
 
 public class StoreTest {
   Store store;
@@ -56,14 +57,13 @@ public class StoreTest {
     System.out.println("west latch should be at 0: " + westPhaseSignal.getCount());
     System.out.println("close latch should be at 0: " + closeSignal.getCount());
   }
-
+  */
   @Test
   public void makePOSTRequest() {
     ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath("http://localhost:8080/a1_war_exploded");
+    apiClient.setBasePath("http://localhost:8080/superMarketServer_war_exploded");
     PurchaseApi apiInstance = new PurchaseApi(apiClient);
     Integer custID = store.randomCustID();
     store.makePOSTRequest(apiInstance, store.createPurchaseBody(), custID);
   }
-  */
 }

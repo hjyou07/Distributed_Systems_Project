@@ -59,7 +59,7 @@ public class Store implements Runnable {
     closeSignal.countDown();
   }
 
-  private Purchase createPurchaseBody() {
+  protected Purchase createPurchaseBody() {
     Purchase body = new Purchase();
     // generate a specified number of purchase items (default=5)
     for (int i=0; i < numPurchaseItems; i++) {
@@ -72,7 +72,7 @@ public class Store implements Runnable {
     return body;
   }
 
-  private void makePOSTRequest(PurchaseApi apiInstance, Purchase body, Integer custID) {
+  void makePOSTRequest(PurchaseApi apiInstance, Purchase body, Integer custID) {
     try {
       apiInstance.newPurchase(body, storeID, custID, date);
       ApiResponse response = apiInstance.newPurchaseWithHttpInfo(body, storeID, custID, date);
@@ -87,7 +87,7 @@ public class Store implements Runnable {
     }
   }
 
-  private Integer randomCustID() {
+  Integer randomCustID() {
     Random rand = new Random();
     int custID = rand.nextInt(numCust) + (storeID * 1000);
     return custID;

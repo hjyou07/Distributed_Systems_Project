@@ -29,7 +29,7 @@ public class Client {
     for (int i=0; i < maxStores; i++) {
       storeThreads[i] = new Store(i,purchaseCounter, badPurchaseCounter, centralPhaseSignal,westPhaseSignal,closeSignal);
       // TODO: all the setters should call in values from the command line
-      storeThreads[i].setServerAddress("http://localhost:8080/a1_war_exploded");
+      storeThreads[i].setServerAddress("http://localhost:8080/superMarketServer_war_exploded");
     }
 
     // note the indices of the starting store of each phase
