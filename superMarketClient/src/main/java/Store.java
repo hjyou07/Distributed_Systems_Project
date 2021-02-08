@@ -12,7 +12,7 @@ public class Store implements Runnable {
   private static final int START_CENTRAL_PHASE = 3;
   private static final int START_WEST_PHASE = 5;
 
-  private Integer storeID;
+  private int storeID;
   private PurchaseCounter purchaseCounter;
   private PurchaseCounter badPurchaseCounter;
   private CountDownLatch centralPhaseSignal;
@@ -24,10 +24,10 @@ public class Store implements Runnable {
   private int numPurchases = 60; // number of purchases per hour
   private int numPurchaseItems = 5; // number of items for each purchase between 1 ~ 20
   private String date = "20210101"; // string representation of date
-  private String serverAddress;
+  private String serverAddress = "http://localhost:8080/superMarketServer_war_exploded";
 
 
-  public Store(Integer storeID, PurchaseCounter purchaseCounter, PurchaseCounter badPurchaseCounter,
+  public Store(int storeID, PurchaseCounter purchaseCounter, PurchaseCounter badPurchaseCounter,
       CountDownLatch centralPhaseSignal, CountDownLatch westPhaseSignal, CountDownLatch closeSignal) {
     this.storeID = storeID;
     this.purchaseCounter = purchaseCounter;
