@@ -1,4 +1,6 @@
 import java.util.concurrent.CountDownLatch;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Client {
   private final static int PHASE_BARRIER = 1;
@@ -99,6 +101,7 @@ public class Client {
             break;
           case 2:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
+            validateServerAddr(serverAddress);
             break;
         }
       }
@@ -132,6 +135,7 @@ public class Client {
             break;
           case 6:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
+            validateServerAddr(serverAddress);
             break;
         }
       }
@@ -153,6 +157,17 @@ public class Client {
      if (input < low || input > high) {
        throw new InvalidArgumentException();
      }
+  }
+
+  private static void validateServerAddr(String address) throws InvalidArgumentException {
+    String pattern = "(^http://)(\\d+\\.+\\d+\\.+\\d+\\.+\\d+)(:\\d+)(/superMarketServer_war$)";
+    Pattern r = Pattern.compile(pattern);
+    Matcher m = r.matcher(address);
+//    System.out.println(r.toString());
+//    System.out.println(m.matches());
+    if (!(m.matches() || address.contains("localhost"))) {
+      throw new InvalidArgumentException();
+    }
   }
 
   // TODO: check date format
