@@ -24,7 +24,7 @@ public class Store implements Runnable {
   private int numPurchases = 60; // number of purchases per hour
   private int numPurchaseItems = 5; // number of items for each purchase between 1 ~ 20
   private String date = "20210101"; // string representation of date
-  private String serverAddress = "http://localhost:8080/superMarketServer_war_exploded";
+  private String serverAddress = "http://localhost:8080/superMarketServer_war_exploded"; // default value for me
 
 
   public Store(int storeID, PurchaseCounter purchaseCounter, PurchaseCounter badPurchaseCounter,

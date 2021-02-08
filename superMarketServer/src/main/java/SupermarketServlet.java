@@ -14,7 +14,6 @@ public class SupermarketServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req,
       HttpServletResponse res)
       throws ServletException, IOException {
-    // TODO: implement doPost method using similar URL validation and the API spec
     res.setContentType("plain/text");
     String urlPath = req.getPathInfo();
 
@@ -50,7 +49,6 @@ public class SupermarketServlet extends HttpServlet {
 
     // now try creating the purchase POJO object from the json string
     Purchase purchase = readRequestBody(reqBody,res);
-    System.out.println(purchase.itemList.get(0).numberOfItems);
 
     if (!isRequestValid(purchase)) {
       System.out.println("Bad requestBody");
@@ -67,7 +65,6 @@ public class SupermarketServlet extends HttpServlet {
     // check for the [, 001, customer, 001, date, 20210101]
     // Stream.of(urlParts).forEach(System.out::println);
     for (int i =0; i < urlParts.length; i++) {
-      //System.out.println(i);
       switch (i) {
         // actually, I don't really need to check for 0 because servlet mapping specifies /purchase/*
         case 1: case 3: case 5:
@@ -77,7 +74,6 @@ public class SupermarketServlet extends HttpServlet {
           }
           break;
         case 2:
-          //System.out.println(urlParts[i].equals("customer"));
           if (!isStringValid(urlParts[i], "customer")) {
             return false;
           }

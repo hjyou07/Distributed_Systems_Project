@@ -2,9 +2,13 @@ import java.util.concurrent.CountDownLatch;
 
 public class Client {
   private final static int PHASE_BARRIER = 1;
-  private static int maxStores = 32;  // Run with 32, 64, 128, 256 threads
+  private static int maxStores;  // Run with 32, 64, 128, 256 threads,
   private static String date;
   private static String serverAddress;
+  private static int numCust;
+  private static int maxItemID;
+  private static int numPurchases;
+  private static int numPurchaseItems;
 
   private static PurchaseCounter purchaseCounter;
   private static PurchaseCounter badPurchaseCounter;
@@ -12,9 +16,10 @@ public class Client {
   private static long threadEndTime;
 
   public static void main(String[] args) throws InterruptedException, InvalidArgumentException {
-    // TODO: Read in the parameters -> how? just parse thru args? For now, I'm just manually gonna set it
+    // TODO: Read in the parameters
     parseArgs(args);
     // create the global counter
+    // TODO: Avoid doing this in part 2
     purchaseCounter = new PurchaseCounter();
     badPurchaseCounter = new PurchaseCounter();
     // create latch to pass it into every store thread
@@ -30,11 +35,15 @@ public class Client {
     Store[] storeThreads = new Store[maxStores];
     for (int i=0; i < maxStores; i++) {
       storeThreads[i] = new Store(i,purchaseCounter, badPurchaseCounter, centralPhaseSignal,westPhaseSignal,closeSignal);
-      // TODO: all the setters should call in values from the command line
-      // the correcnt serverAddress is: http://localhost:8080/superMarketServer_war_exploded
       if (date != null && serverAddress != null) {
         storeThreads[i].setServerAddress(serverAddress);
         storeThreads[i].setDate(date);
+      }
+      if (numCust != 0 && maxItemID != 0 && numPurchases != 0 && numPurchaseItems != 0) {
+        storeThreads[i].setNumCust(numCust);
+        storeThreads[i].setMaxItemID(maxItemID);
+        storeThreads[i].setNumPurchases(numPurchases);
+        storeThreads[i].setNumPurchaseItems(numPurchaseItems);
       }
     }
 
@@ -68,12 +77,19 @@ public class Client {
 
   private static void parseArgs(String[] args) throws InvalidArgumentException {
     // force the user to either input all parameters, or provide only maxStores, date, and IP address
+    // but for dev purposes, I'm allowing no arguments to run it on localhost with default config
     if (args.length != 3 && args.length != 7 && args.length != 0) {
-      InvalidArgumentException e = new InvalidArgumentException();
-      System.err.println(e.getMessage());
-      throw e;
+      throwCustomException();
     } else if (args.length == 3) {
-      for (int i=0; i < 3; i++) {
+      parseThreeArgs(args);
+    } else {
+      parseAllArgs(args);
+    }
+  }
+
+  private static void parseThreeArgs(String[] args) throws InvalidArgumentException {
+    try {
+      for (int i = 0; i < 3; i++) {
         switch (i) {
           case 0:
             maxStores = Integer.parseInt(args[i]);
@@ -82,12 +98,64 @@ public class Client {
             date = args[i];
             break;
           case 2:
-            serverAddress = args[i].concat("/superMarketServer_war_exploded");
+            serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
             break;
         }
       }
-    } //TODO: handle the case where the user inputs all the params
+    } catch(Exception e) {
+      throwCustomException();
+    }
   }
+
+  private static void parseAllArgs(String[] args) throws InvalidArgumentException {
+    try {
+      for (int i = 0; i < 7; i++) {
+        switch (i) {
+          case 0:
+            maxStores = Integer.parseInt(args[i]);
+            break;
+          case 1:
+            numCust = Integer.parseInt(args[i]);
+            break;
+          case 2:
+            maxItemID = Integer.parseInt(args[i]);
+            break;
+          case 3:
+            numPurchases = Integer.parseInt(args[i]);
+            break;
+          case 4:
+            limitInputRange(1, 20, args[i]);
+            numPurchaseItems = Integer.parseInt(args[i]);
+            break;
+          case 5:
+            date = args[i];
+            break;
+          case 6:
+            serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
+            break;
+        }
+      }
+    } catch(Exception e) {
+      throwCustomException();
+    }
+  }
+
+  private static void throwCustomException() throws InvalidArgumentException {
+    InvalidArgumentException e = new InvalidArgumentException();
+    System.err.println(e.getExceptionMessage());
+    throw e;
+  }
+
+  // test 21, and some string that will cause parseInt to fail
+  private static void limitInputRange(int low, int high, String arg)
+      throws InvalidArgumentException {
+     int input = Integer.parseInt(arg);
+     if (input < low || input > high) {
+       throw new InvalidArgumentException();
+     }
+  }
+
+  // TODO: check date format
 
   private static String report() {
     StringBuilder reportBuilder = new StringBuilder();
