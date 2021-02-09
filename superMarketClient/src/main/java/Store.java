@@ -74,7 +74,6 @@ public class Store implements Runnable {
 
   private void makePOSTRequest(PurchaseApi apiInstance, Purchase body, Integer custID) {
     try {
-      apiInstance.newPurchase(body, storeID, custID, date);
       ApiResponse response = apiInstance.newPurchaseWithHttpInfo(body, storeID, custID, date);
       if ((response.getStatusCode() == 201)) {
         purchaseCounter.inc();
