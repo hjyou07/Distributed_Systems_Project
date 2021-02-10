@@ -18,8 +18,8 @@ public class Client {
   private static int numPurchases;
   private static int numPurchaseItems;
 
-  private static long threadStartTime;
-  private static long threadEndTime;
+  protected static long threadStartTime;
+  protected static long threadEndTime;
 
   public static void main(String[] args) throws InterruptedException, InvalidArgumentException {
     // TODO: Read in the parameters
@@ -98,7 +98,9 @@ public class Client {
     } catch (InterruptedException e) {
       System.err.println("Consumer threads were interrupted");
     }
-    System.out.println(report());
+    // TODO: Should I externally pass in a LatencyBucket object instead of creating it within?
+    DataProcessor dataProcessor = new DataProcessor(preprocessor.getLatencyBucket());
+    System.out.println(report(dataProcessor));
   }
 
   private static void parseArgs(String[] args) throws InvalidArgumentException {
@@ -196,24 +198,17 @@ public class Client {
 
   // TODO: check date format
 
-  private static String report() {
+  private static String report(DataProcessor dataProcessor) {
+    long wallTime;
     StringBuilder reportBuilder = new StringBuilder();
     reportBuilder.append("number of stores: " + maxStores);
-    //reportBuilder.append("\ntotal number of successful requests: " + purchaseCounter.getCount());
-    // TODO: Figure out a way to keep track of number of requests
-    //reportBuilder.append("\ntotal number of unsuccessful requests: " + (badPurchaseCounter.getCount()));
-    reportBuilder.append("\ntotal wall time (sec): " + calculateWallTime());
-    //reportBuilder.append("\nthroughput (requests/sec): " + calculateThroughput(purchaseCounter.getCount(), calculateWallTime()));
+    reportBuilder.append("\ntotal number of successful requests: " + dataProcessor.getSuccess());
+    reportBuilder.append("\ntotal number of unsuccessful requests: " + dataProcessor.getFailure());
+    reportBuilder.append("\ntotal wall time (sec): " + (wallTime = dataProcessor.calculateWallTime()));
+    reportBuilder.append("\nthroughput (requests/sec): " + dataProcessor.calculateThroughput(wallTime));
+    reportBuilder.append("\nmean response time for POSTs (millisec): " + dataProcessor.calculateMean());
+    reportBuilder.append("\nmedian response time for POSTS (millisec): " + dataProcessor.calculateMedian());
     return reportBuilder.toString();
-  }
-
-  private static long calculateWallTime() {
-    // timestamps are in milliseconds, convert to seconds
-    return ((threadEndTime - threadStartTime) / 1000);
-  }
-
-  private static double calculateThroughput(int numRequest, long wallTime) {
-    return numRequest/wallTime;
   }
 
 }
