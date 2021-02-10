@@ -52,7 +52,8 @@ public class RecordWriter implements Runnable {
     String requestType = pojoResponse.getRequestType();
     String latency = String.valueOf(pojoResponse.getLatency());
     String responseCode = String.valueOf(pojoResponse.getResponseCode());
-    String[] data = new String[]{startTime, requestType, latency, responseCode};
+    // String[] data = new String[]{startTime, requestType, latency, responseCode};
+    String[] data = new String[]{latency, latency, latency, latency};
     return String.join(",", data);
   }
 

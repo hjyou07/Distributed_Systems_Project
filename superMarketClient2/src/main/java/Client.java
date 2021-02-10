@@ -101,6 +101,7 @@ public class Client {
     // TODO: Should I externally pass in a LatencyBucket object instead of creating it within?
     DataProcessor dataProcessor = new DataProcessor(preprocessor.getLatencyBucket());
     System.out.println(report(dataProcessor));
+    //dataProcessor.printCounterBucket();
   }
 
   private static void parseArgs(String[] args) throws InvalidArgumentException {
@@ -208,6 +209,8 @@ public class Client {
     reportBuilder.append("\nthroughput (requests/sec): " + dataProcessor.calculateThroughput(wallTime));
     reportBuilder.append("\nmean response time for POSTs (millisec): " + dataProcessor.calculateMean());
     reportBuilder.append("\nmedian response time for POSTS (millisec): " + dataProcessor.calculateMedian());
+    reportBuilder.append("\np99 response time for POSTS (millisec): " + dataProcessor.calculateP99());
+    reportBuilder.append("\nmaximum response time for POSTS (millisec): " + dataProcessor.getMaximum());
     return reportBuilder.toString();
   }
 

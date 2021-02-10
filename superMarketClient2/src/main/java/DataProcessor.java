@@ -1,53 +1,60 @@
 import Model.LatencyBucket;
 
 public class DataProcessor {
-  /* 5. DataProcessor calculates the following:
-  - mean response time for POSTs (millisecs)
-  - median response time for POSTs (millisecs)
-  - the total wall time
-  - throughput = requests per second = total number of requests/wall time
-  - p99 (99th percentile) response time for POSTs [Here’s a nice article](https://www.elastic.co/blog/averages-can-dangerous-use-percentile) about why percentiles are important and why calculating them is not always easy.
-  - max response time for POSTs
-   */
+  // 5. DataProcessor calculates the stat
   // needs to access Client's threadStartTime and threadEndTime
-  private int median;
   private int p99;
   private int max;
   private int wallTime;
   private int throughput;
   private LatencyBucket latencyBucket;
-  private int[] cumulBucket;
+  private int[] counterBucket;
 
   public DataProcessor(LatencyBucket latencyBucket) {
     this.latencyBucket = latencyBucket;
-    //cumulBucket = latencyBucket.makeCumulativeBucket();
+    this.counterBucket = latencyBucket.getCounterBucket();
   }
 
   public double calculateMean() {
-    int[] counterBucket = latencyBucket.getCounterBucket();
     int total = 0;
     for (int i=0; i < counterBucket.length; i++) {
       total += i * counterBucket[i];
     }
     int numRequest = getSuccess() + getFailure();
-    // cumulBucket holds all the number of requests at the end of the array
-    // assert(cumulBucket[cumulBucket.length-1] == (getSuccess()+getFailure()));
+    System.out.println(total);
+    System.out.println(numRequest);
     return total/numRequest;
   }
 
-  public int calculateMedian() {
-    int[] counterBucket = latencyBucket.getCounterBucket();
-    int median = (getSuccess() + getFailure()) / 2;
-    System.out.println(median);
+  public int calculatePercentile(double percentile) {
+    double p = percentile * (getSuccess() + getFailure());
     int nthRequest = 0;
-    for (int i=0; i < counterBucket.length; i++) {
-      nthRequest += counterBucket[i];
-      if (nthRequest >= median) {
-        return i;
-      }
+    int i = 0;
+    while (nthRequest < p) {
+      nthRequest += counterBucket[i++];
     }
-    System.out.println("nth request is at: " + nthRequest);
-    return -1;
+    return i-1;
+  }
+
+  public int calculateMedian() {
+    return calculatePercentile(0.5);
+  }
+
+  public int calculateP99() {
+    return calculatePercentile(0.99);
+  }
+
+  public int getMaximum() {
+    return calculatePercentile(1);
+  }
+
+  public int getMinimum() {
+    int nthRequest = 0;
+    int i = 0;
+    while (nthRequest < 1) {
+      nthRequest += counterBucket[i++];
+    }
+    return i-1;
   }
 
   public long calculateWallTime() {
@@ -66,6 +73,12 @@ public class DataProcessor {
 
   public int getFailure() {
     return latencyBucket.getFailureCount();
+  }
+
+  public void printCounterBucket() {
+    for (int i=0; i<300; i++) {
+       System.out.println(counterBucket[i]);
+    }
   }
 
 }
