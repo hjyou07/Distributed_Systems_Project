@@ -17,8 +17,6 @@ public class DataProcessor {
       total += i * counterBucket[i];
     }
     int numRequest = getSuccess() + getFailure();
-    System.out.println(total);
-    System.out.println(numRequest);
     return total/numRequest;
   }
 

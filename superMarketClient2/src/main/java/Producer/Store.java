@@ -25,7 +25,7 @@ public class Store implements Runnable {
 
   private int numCust = 1000; // number of customer per store. Defines the range of custIDS
   private int maxItemID = 100000; //
-  private int numPurchases = 60; // number of purchases per hour
+  private int numPurchases = 300; // number of purchases per hour
   private int numPurchaseItems = 5; // number of items for each purchase between 1 ~ 20
   private String date = "20210101"; // string representation of date
   private String serverAddress = "http://localhost:8080/superMarketServer_war_exploded"; // default value for me

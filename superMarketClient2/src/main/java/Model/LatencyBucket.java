@@ -5,7 +5,7 @@ public class LatencyBucket {
   // where i is the index of the bucket (1 ~ 10000).
   // e.g. bucket[10] = 5 means there's 5 requests with latency of 10ms
   // bucket size is 10000 representing the timeout for a http request.
-  private final static int TIME_OUT = 10000;
+  private final static int TIME_OUT = 100000;
   private int[] counterBucket = new int[TIME_OUT];
   private int successCount;
   private int failureCount;
