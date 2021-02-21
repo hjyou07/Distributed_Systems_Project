@@ -1,2 +1,6 @@
 .DS_Store
 java-client-generated/
+*.sql
+*.docx
+*.txt
+*.png
