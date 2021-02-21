@@ -1,4 +1,4 @@
-package Model;
+package Producer;
 
 import Model.Response;
 import io.swagger.client.ApiClient;

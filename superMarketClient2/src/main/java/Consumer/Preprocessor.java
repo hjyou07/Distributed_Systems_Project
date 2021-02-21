@@ -10,7 +10,6 @@ public class Preprocessor implements Runnable {
   // number of latencies that falls into each bucket
   private final BlockingQueue<Response> preprocessBuffer;
   private LatencyBucket latencyBucket = new LatencyBucket();
-  private int successCount;
 
   public Preprocessor(BlockingQueue preprocessBuffer) {
     this.preprocessBuffer = preprocessBuffer;

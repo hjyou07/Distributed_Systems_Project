@@ -37,18 +37,12 @@ public class RecordWriter implements Runnable {
 
   }
 
-  private LocalDateTime convertEpochToDate(long epochSecond) {
-    return LocalDateTime.ofInstant(Instant.ofEpochMilli(epochSecond), ZoneId.systemDefault());
-  }
-
   private String convertEpochToTimestamp(long epochMilli) {
     return (new Timestamp(epochMilli)).toString();
   }
 
   public String formatToCSV(Response pojoResponse) {
     String startTime = convertEpochToTimestamp(pojoResponse.getStart());
-    // uncomment below if you want the date format of epoch milliseconds
-    // String startTime = String.valueOf(convertEpochToDate(pojoResponse.getStart()));
     String requestType = pojoResponse.getRequestType();
     String latency = String.valueOf(pojoResponse.getLatency());
     String responseCode = String.valueOf(pojoResponse.getResponseCode());

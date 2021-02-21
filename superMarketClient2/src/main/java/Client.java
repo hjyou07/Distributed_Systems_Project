@@ -1,7 +1,7 @@
 import Consumer.Preprocessor;
 import Consumer.RecordWriter;
 import Model.Response;
-import Model.Store;
+import Producer.Store;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,8 +18,8 @@ public class Client {
   private static int numPurchases;
   private static int numPurchaseItems;
 
-  protected static long threadStartTime;
-  protected static long threadEndTime;
+  private static long threadStartTime;
+  private static long threadEndTime;
 
   public static void main(String[] args) throws InterruptedException, InvalidArgumentException {
     // TODO: Read in the parameters
@@ -205,7 +205,7 @@ public class Client {
     reportBuilder.append("number of stores: " + maxStores);
     reportBuilder.append("\ntotal number of successful requests: " + dataProcessor.getSuccess());
     reportBuilder.append("\ntotal number of unsuccessful requests: " + dataProcessor.getFailure());
-    reportBuilder.append("\ntotal wall time (sec): " + (wallTime = dataProcessor.calculateWallTime()));
+    reportBuilder.append("\ntotal wall time (sec): " + (wallTime = dataProcessor.calculateWallTime(threadStartTime, threadEndTime)));
     reportBuilder.append("\nthroughput (requests/sec): " + dataProcessor.calculateThroughput(wallTime));
     reportBuilder.append("\nmean response time for POSTs (millisec): " + dataProcessor.calculateMean());
     reportBuilder.append("\nmedian response time for POSTS (millisec): " + dataProcessor.calculateMedian());

@@ -11,13 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(name = "Servlet")
 public class SupermarketServlet extends HttpServlet {
 
-  protected void doPost(HttpServletRequest req,
-      HttpServletResponse res)
-      throws ServletException, IOException {
+  protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     res.setContentType("plain/text");
     String urlPath = req.getPathInfo();
 
-    // check we have a URL!
+    // check we have a URL! -> TODO: Refactor to checkNull(String content, HTTPServletResponse res, String message), for either url or reqBody
     if (urlPath == null || urlPath.isEmpty()) {
       System.out.println("Missing parameters");
       res.setStatus(HttpServletResponse.SC_NOT_FOUND); // status code: 404 Not Found
@@ -26,12 +24,17 @@ public class SupermarketServlet extends HttpServlet {
     }
 
     String[] urlParts = urlPath.split("/");
+    int storeID; int custID; String purchaseDate;
     // and now validate url path and return the response status code
     if (!isUrlValid(urlParts)) {
       System.out.println("Bad parameters");
       res.setStatus(HttpServletResponse.SC_NOT_FOUND); // if url not valid, status code: 404
       res.getWriter().write("Bad parameters");
       return;
+    } else {
+      storeID = Integer.valueOf(urlParts[1]);
+      custID = Integer.valueOf(urlParts[3]);
+      purchaseDate = urlParts[5];
     }
 
     // check request body
@@ -48,15 +51,23 @@ public class SupermarketServlet extends HttpServlet {
     }
 
     // now try creating the purchase POJO object from the json string
-    Purchase purchase = readRequestBody(reqBody,res);
+    Purchase purchase = readRequestBody(reqBody, storeID, custID, purchaseDate);
 
     if (!isRequestValid(purchase)) {
       System.out.println("Bad requestBody");
       res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       res.getWriter().write("Bad requestBody");
     } else {
-      res.setStatus(HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
-      res.getWriter().write(String.format("echoing the request body: %s", purchase.itemList.toString()));
+      try {
+        PurchaseDao dao = new PurchaseDao();
+        dao.createPurchaseInDB(purchase);
+        res.setStatus(
+            HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
+        res.getWriter().write(String.format("echoing the request body: %s", purchase.items));
+      } catch (Exception e) {
+        System.out.println("PurchaseDao can't be created");
+        e.printStackTrace();
+      }
     }
   }
 
@@ -89,22 +100,21 @@ public class SupermarketServlet extends HttpServlet {
   }
 
   private boolean isRequestValid(Purchase purchase) {
-    // TODO: implement a validation for the Purchase POJO created by request body
-    for (PurchaseItem item : purchase.itemList) {
-      if (item.numberOfItems == 0) {
-        return false;
-      }
-    }
+    // TODO: implement a validation for the ProtoPurchase POJO created by request body
     return true;
   }
 
-  private Purchase readRequestBody(String reqBody, HttpServletResponse res) throws IOException {
+  private Purchase readRequestBody(String reqBody, int storeID, int custID, String purchaseDate) {
+    return new Purchase(storeID, custID, purchaseDate, reqBody);
+  }
+
+  private ProtoPurchase readRequestBody(String reqBody, HttpServletResponse res) throws IOException {
     try {
-      Purchase purchase = new Gson().fromJson(reqBody, Purchase.class);
+      ProtoPurchase purchase = new Gson().fromJson(reqBody, ProtoPurchase.class);
       return purchase;
     } catch(Exception e) {
       System.err.println(e.getMessage());
-      res.getWriter().write("Bad requestBody, can't create a Purchase");
+      res.getWriter().write("Bad requestBody, can't create a ProtoPurchase");
     }
     return null;
   }

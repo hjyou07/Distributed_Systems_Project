@@ -3,10 +3,6 @@ import Model.LatencyBucket;
 public class DataProcessor {
   // 5. DataProcessor calculates the stat
   // needs to access Client's threadStartTime and threadEndTime
-  private int p99;
-  private int max;
-  private int wallTime;
-  private int throughput;
   private LatencyBucket latencyBucket;
   private int[] counterBucket;
 
@@ -26,7 +22,7 @@ public class DataProcessor {
     return total/numRequest;
   }
 
-  public int calculatePercentile(double percentile) {
+  private int calculatePercentile(double percentile) {
     double p = percentile * (getSuccess() + getFailure());
     int nthRequest = 0;
     int i = 0;
@@ -57,9 +53,9 @@ public class DataProcessor {
     return i-1;
   }
 
-  public long calculateWallTime() {
+  public long calculateWallTime(long start, long end) {
     // timestamps are in milliseconds, convert to seconds
-    return ((Client.threadEndTime - Client.threadStartTime) / 1000);
+    return ((end - start) / 1000);
   }
 
   public double calculateThroughput(long wallTime) {
