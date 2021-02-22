@@ -11,70 +11,85 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(name = "Servlet")
 public class SupermarketServlet extends HttpServlet {
 
+  protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    res.setContentType("text/plain");
+    String urlPath = req.getPathInfo();
+
+    String[] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND, "Missing parameters");
+    
+    if (urlParts.length != 0) {
+      res.setStatus(HttpServletResponse.SC_OK);
+      res.getWriter().write("It works!");
+      // do any sophisticated processing with urlParts which contains all the url params TODO: process url params in 'urlParts'
+    }
+  }
+
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     res.setContentType("plain/text");
     String urlPath = req.getPathInfo();
 
-    // check we have a URL! -> TODO: Refactor to checkNull(String content, HTTPServletResponse res, String message), for either url or reqBody
-    if (urlPath == null || urlPath.isEmpty()) {
-      System.out.println("Missing parameters");
-      res.setStatus(HttpServletResponse.SC_NOT_FOUND); // status code: 404 Not Found
-      res.getWriter().write("Missing parameters");
-      return;
-    }
-
-    String[] urlParts = urlPath.split("/");
     int storeID; int custID; String purchaseDate;
-    // and now validate url path and return the response status code
-    if (!isUrlValid(urlParts)) {
-      System.out.println("Bad parameters");
-      res.setStatus(HttpServletResponse.SC_NOT_FOUND); // if url not valid, status code: 404
-      res.getWriter().write("Bad parameters");
-      return;
-    } else {
-      storeID = Integer.valueOf(urlParts[1]);
-      custID = Integer.valueOf(urlParts[3]);
-      purchaseDate = urlParts[5];
-    }
 
-    // check request body
+    String [] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND, "Missing parameters");
+    if (urlParts.length == 0) return;
+
+    storeID = Integer.valueOf(urlParts[1]);
+    custID = Integer.valueOf(urlParts[3]);
+    purchaseDate = urlParts[5];
+
+    // check request body, .lines() returns Stream<String>, .collect() returns String
     BufferedReader reqBodyBuffer = req.getReader();
-    // .lines() returns Stream<String>, .collect() returns String,
-    // you can pass in an optional param in Collectors.joining() for a separator
     String reqBody = reqBodyBuffer.lines().collect(Collectors.joining());
-
-    if (reqBody == null || reqBody.isEmpty()) {
-      System.out.println("Missing requestBody");
-      res.setStatus(HttpServletResponse.SC_BAD_REQUEST); // status code: 400, Invalid Inputs
-      res.getWriter().write("Missing requestBody");
+    if (checkNull(reqBody, res, HttpServletResponse.SC_BAD_REQUEST, "Missing requestBody")) {
       return;
     }
-
+    
     // now try creating the purchase POJO object from the json string
     Purchase purchase = readRequestBody(reqBody, storeID, custID, purchaseDate);
 
     if (!isRequestValid(purchase)) {
-      System.out.println("Bad requestBody");
       res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       res.getWriter().write("Bad requestBody");
-    } else {
-      try {
-        PurchaseDao dao = new PurchaseDao();
-        dao.createPurchaseInDB(purchase);
-        res.setStatus(
-            HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
-        res.getWriter().write(String.format("echoing the request body: %s", purchase.items));
-      } catch (Exception e) {
-        System.out.println("PurchaseDao can't be created");
-        e.printStackTrace();
-      }
+      return;
     }
+
+    try {
+      PurchaseDao dao = new PurchaseDao();
+      dao.createPurchaseInDB(purchase);
+      res.setStatus(
+          HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
+      res.getWriter().write(String.format("echoing the request body: %s", purchase.items));
+    } catch (Exception e) {
+      System.out.println("PurchaseDao can't be created");
+      e.printStackTrace();
+    }
+  }
+
+  private String[] isTotalURLValid(String url, HttpServletResponse res, int resCode, String nullMessage) throws IOException {
+    if (checkNull(url, res, resCode, nullMessage)) { return new String[]{}; }
+    String[] parts = url.split("/");
+    if (!isUrlValid(parts)) {
+      res.setStatus(resCode);
+      res.getWriter().write("Bad parameters");
+      return new String[]{};
+    }
+    return parts;
+  }
+
+  private boolean checkNull(String content, HttpServletResponse res, int resCode, String message) throws IOException {
+      if ((content == null || content.isEmpty())) {
+        res.setStatus(resCode);
+        res.getWriter().write(message);
+        return true;
+      }
+      return false;
   }
 
   private boolean isUrlValid(String[] urlParts) {
     // urlPath = "/purchase/{storeID}/customer/{custID}/date/yyyymmdd"
     // check for the [, 001, customer, 001, date, 20210101]
-    // Stream.of(urlParts).forEach(System.out::println);
+    // below checks for the ~/purchase/
+    if (urlParts.length == 0 || urlParts.length != 6) return false;
     for (int i =0; i < urlParts.length; i++) {
       switch (i) {
         // actually, I don't really need to check for 0 because servlet mapping specifies /purchase/*
@@ -130,32 +145,6 @@ public class SupermarketServlet extends HttpServlet {
 
   private boolean isStringValid(String string1, String string2) {
     return string1.equals(string2);
-  }
-
-  protected void doGet(HttpServletRequest req,
-      HttpServletResponse res)
-      throws ServletException, IOException {
-    res.setContentType("text/plain");
-    String urlPath = req.getPathInfo();
-
-    // check we have a URL!
-    if (urlPath == null || urlPath.isEmpty()) {
-      res.setStatus(HttpServletResponse.SC_NOT_FOUND); // status code: 404 Not Found
-      res.getWriter().write("missing parameters");
-      return;
-    }
-
-    String[] urlParts = urlPath.split("/");
-    // and now validate url path and return the response status code
-    // (and maybe also some value if input is valid)
-    if (!isUrlValid(urlParts)) {
-      res.setStatus(HttpServletResponse.SC_NOT_FOUND); // if url not valid, status code: 404
-    } else {
-      res.setStatus(HttpServletResponse.SC_OK); // if url valid, status code: 200 Ok
-      // do any sophisticated processing with urlParts which contains all the url params
-      // TODO: process url params in 'urlParts'
-      res.getWriter().write("It works!");
-    }
   }
 
 }

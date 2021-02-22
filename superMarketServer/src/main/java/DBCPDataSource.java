@@ -23,6 +23,7 @@ public class DBCPDataSource {
     // there's also jdbc:mysql:loadbalance: for load-balancing JDBC connections, would I need it?
     // properties are preceded by ? and written as key=value pairs separated by the symbol &
     String url = String.format("jdbc:mysql://%s:%s/%s?serverTimezone=UTC", HOST_NAME, PORT, DATABASE);
+    System.out.println(url);
     dataSource.setUrl(url);
     dataSource.setUsername(USERNAME);
     dataSource.setPassword(PASSWORD);
