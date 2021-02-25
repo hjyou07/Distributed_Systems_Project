@@ -1,3 +1,4 @@
+import com.zaxxer.hikari.HikariDataSource;
 import java.sql.*;
 import org.apache.commons.dbcp2.*;
 
@@ -6,16 +7,16 @@ import org.apache.commons.dbcp2.*;
  * some type of persistence mechanism that allows bridging the application server to the database
  */
 public class PurchaseDao {
-  private static BasicDataSource dataSource;
+  private static HikariDataSource dataSource;
 
   public PurchaseDao() {
-    dataSource = DBCPDataSource.getDataSource();
+    dataSource = DataSource.getDataSource();
   }
 
   /**
    * Takes in a Purchase POJO, then insert it into MySQL database
    */
-  public void createPurchaseInDB(Purchase purchase) {
+  public void createPurchaseInDB(Purchase purchase) throws SQLException {
     Connection conn = null;
     PreparedStatement insertStatement = null;
     String insertQuery = "INSERT INTO Purchase (storeID, custID, purchaseDate, items) " +
@@ -32,6 +33,7 @@ public class PurchaseDao {
       insertStatement.executeUpdate();
     } catch (SQLException e) {
       e.printStackTrace();
+      throw e;
     } finally {
       try {
         if (conn != null) {
@@ -41,6 +43,7 @@ public class PurchaseDao {
           insertStatement.close();
         }
       } catch (SQLException se) {
+        System.err.println("problem closing the connection with MySQL DB");
         se.printStackTrace();
       }
     }
@@ -50,7 +53,7 @@ public class PurchaseDao {
    * This main method tests the connection and insert query to local mysql database
    * @param args None
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws SQLException {
     PurchaseDao purchaseDao = new PurchaseDao();
     String items = "{\"items\":[{\"itemID\":\"101\",\"numItems\":\"1\"},{\"itemID\":\"102\",\"numItems\":\"1\"},{\"itemID\":\"103\",\"numItems\":\"1\"},{\"itemID\":\"104\",\"numItems\":\"1\"},{\"itemID\":\"105\",\"numItems\":\"1\"}]}";
     purchaseDao.createPurchaseInDB(new Purchase(1,1001,"20210101", items));

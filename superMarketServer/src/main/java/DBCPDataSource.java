@@ -3,12 +3,12 @@ import org.apache.commons.dbcp2.*;
 public class DBCPDataSource {
   private static BasicDataSource dataSource;
 
-  // NEVER store sensitive information below in plain text! TODO: figure out the fucking system properties
-  private static final String HOST_NAME = "127.0.0.1"; /* System.getProperty("MySQL_IP_ADDRESS"); */
-  private static final String PORT = "3306"; /* System.getProperty("MySQL_PORT"); */
+  // NEVER store sensitive information below in plain text! TODO: figure out system properties
+  private static final String HOST_NAME = /*"127.0.0.1";*/System.getProperty("MySQL_IP_ADDRESS");
+  private static final String PORT = /*"3306";*/System.getProperty("MySQL_PORT");
   private static final String DATABASE = "SuperMarketDB";
-  private static final String USERNAME = "heej"; /* System.getProperty("DB_USERNAME"); */
-  private static final String PASSWORD = "letmein"; /* System.getProperty("DB_PASSWORD"); */
+  private static final String USERNAME = /*"heej";*/System.getProperty("DB_USERNAME");
+  private static final String PASSWORD = /*"letmein";*/System.getProperty("DB_PASSWORD");
 
   static {
     dataSource = new BasicDataSource();
@@ -23,6 +23,7 @@ public class DBCPDataSource {
     // there's also jdbc:mysql:loadbalance: for load-balancing JDBC connections, would I need it?
     // properties are preceded by ? and written as key=value pairs separated by the symbol &
     String url = String.format("jdbc:mysql://%s:%s/%s?serverTimezone=UTC", HOST_NAME, PORT, DATABASE);
+    System.out.println(System.getProperties());
     System.out.println(url);
     dataSource.setUrl(url);
     dataSource.setUsername(USERNAME);

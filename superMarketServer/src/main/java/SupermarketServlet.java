@@ -1,6 +1,7 @@
 import com.google.gson.*;
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.sql.SQLException;
 import java.util.stream.Collectors;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -28,10 +29,14 @@ public class SupermarketServlet extends HttpServlet {
     res.setContentType("plain/text");
     String urlPath = req.getPathInfo();
 
-    int storeID; int custID; String purchaseDate;
+    int storeID;
+    int custID;
+    String purchaseDate;
 
-    String [] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND, "Missing parameters");
-    if (urlParts.length == 0) return;
+    String[] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND,
+        "Missing parameters");
+    if (urlParts.length == 0)
+      return;
 
     storeID = Integer.valueOf(urlParts[1]);
     custID = Integer.valueOf(urlParts[3]);
@@ -43,7 +48,7 @@ public class SupermarketServlet extends HttpServlet {
     if (checkNull(reqBody, res, HttpServletResponse.SC_BAD_REQUEST, "Missing requestBody")) {
       return;
     }
-    
+
     // now try creating the purchase POJO object from the json string
     Purchase purchase = readRequestBody(reqBody, storeID, custID, purchaseDate);
 
@@ -59,8 +64,11 @@ public class SupermarketServlet extends HttpServlet {
       res.setStatus(
           HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
       res.getWriter().write(String.format("echoing the request body: %s", purchase.items));
+    } catch (SQLException e) {
+      res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      res.getWriter().write("There was a problem writing to the DB");
     } catch (Exception e) {
-      System.out.println("PurchaseDao can't be created");
+      System.err.println("PurchaseDao can't be created");
       e.printStackTrace();
     }
   }
