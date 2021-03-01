@@ -17,13 +17,10 @@ public class PurchaseDao {
    * Takes in a Purchase POJO, then insert it into MySQL database
    */
   public void createPurchaseInDB(Purchase purchase) throws SQLException {
-    Connection conn = null;
-    PreparedStatement insertStatement = null;
     String insertQuery = "INSERT INTO Purchase (storeID, custID, purchaseDate, items) " +
         "VALUES (?,?,?,?)";
-    try {
-      conn = dataSource.getConnection();
-      insertStatement = conn.prepareStatement(insertQuery);
+    try (Connection conn = dataSource.getConnection();
+         PreparedStatement insertStatement = conn.prepareStatement(insertQuery);) {
       insertStatement.setInt(1, purchase.getStoreID());
       insertStatement.setInt(2, purchase.getCustID());
       insertStatement.setString(3, purchase.getPurchaseDate());
@@ -34,18 +31,6 @@ public class PurchaseDao {
     } catch (SQLException e) {
       e.printStackTrace();
       throw e;
-    } finally {
-      try {
-        if (conn != null) {
-          conn.close();
-        }
-        if (insertStatement != null) {
-          insertStatement.close();
-        }
-      } catch (SQLException se) {
-        System.err.println("problem closing the connection with MySQL DB");
-        se.printStackTrace();
-      }
     }
   }
 
