@@ -21,6 +21,8 @@ public class Client {
   private static long threadStartTime;
   private static long threadEndTime;
 
+  private final static String LOADBALANCER_DNS = "superMarketServers-1835380030.us-east-1.elb.amazonaws.com";
+
   public static void main(String[] args) throws InterruptedException, InvalidArgumentException {
     // TODO: Read in the parameters
     parseArgs(args);
@@ -128,7 +130,7 @@ public class Client {
             break;
           case 2:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
-            validateServerAddr(serverAddress);
+            //validateServerAddr(serverAddress);
             break;
         }
       }
@@ -162,7 +164,7 @@ public class Client {
             break;
           case 6:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
-            validateServerAddr(serverAddress);
+            //validateServerAddr(serverAddress);
             break;
         }
       }
@@ -192,7 +194,7 @@ public class Client {
     Matcher m = r.matcher(address);
 //    System.out.println(r.toString());
 //    System.out.println(m.matches());
-    if (!(m.matches() || address.contains("localhost"))) {
+    if (!(m.matches() || address.contains("localhost") || address.equals(LOADBALANCER_DNS))) {
       throw new InvalidArgumentException();
     }
   }
