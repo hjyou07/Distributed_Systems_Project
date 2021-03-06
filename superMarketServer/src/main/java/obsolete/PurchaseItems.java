@@ -1,4 +1,5 @@
-import com.google.gson.*;
+package obsolete;
+
 import com.google.gson.annotations.*;
 import java.util.Objects;
 

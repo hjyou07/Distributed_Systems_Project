@@ -8,6 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import obsolete.ProtoPurchase;
 
 @WebServlet(name = "Servlet")
 public class SupermarketServlet extends HttpServlet {
