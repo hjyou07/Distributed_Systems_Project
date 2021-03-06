@@ -3,3 +3,5 @@ java-client-generated/
 *.sql
 *.docx
 *.png
+*.sh
+*.csv
