@@ -1,7 +1,15 @@
 import com.google.gson.*;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,13 +17,68 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import obsolete.ProtoPurchase;
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.ObjectPool;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 @WebServlet(name = "Servlet")
 public class SupermarketServlet extends HttpServlet {
 
+  private ConnectionFactory factory;
+  private Connection conn;
+  private ChannelFactory channelFactory = new ChannelFactory();
+  private ObjectPool<Channel> channelPool;
+
+    public class ChannelFactory extends BasePooledObjectFactory<Channel> {
+      /**
+       * Creates an object instance, to be wrapped in a PooledObject.
+       * @return Channel, for each rabbitmq connection
+       * @throws Exception
+       */
+      @Override
+      public Channel create() throws Exception {
+        return conn.createChannel();
+      }
+
+      /**
+       * Wrap the provided instance with a default implementation of PooledObject.
+       * @param channel
+       * @return
+       */
+      @Override
+      public PooledObject<Channel> wrap(Channel channel) {
+        return new DefaultPooledObject<Channel>(channel);
+      }
+    }
+
   public void init() throws ServletException {
     // TODO 1: In the init() method, initialize the connection (this is the socket, so is slow)
+    factory = new ConnectionFactory();
+    factory.setHost("localhost"); // TODO: Consider using System.Property from catalina.properties
+    try {
+      conn = factory.newConnection();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (TimeoutException e) {
+      e.printStackTrace();
+    }
     // TODO 2: create a channel pool that shares a bunch of pre-created channels
+    channelPool = new GenericObjectPool<>(channelFactory);
+  }
+
+  public void destroy() {
+    if (conn != null) {
+      try {
+        conn.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    if (channelPool != null) {
+      channelPool.close();
+    }
   }
 
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -39,6 +102,7 @@ public class SupermarketServlet extends HttpServlet {
     int custID;
     String purchaseDate;
 
+    // check the incoming url
     String[] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND,
         "Missing parameters");
     if (urlParts.length == 0)
@@ -66,6 +130,8 @@ public class SupermarketServlet extends HttpServlet {
     }
 
     // TODO 3: In the dopost(), create a channel and use that to publish to RabbitMQ. Close it at end of the request
+    // I'm using pool instead. Simply call borrowObject to obtain the buffer, and then call returnObject when we're done with it.
+    // Do I need to define any behavior upon return?
     try {
       PurchaseDao dao = new PurchaseDao();
       dao.createPurchaseInDB(purchase);
@@ -109,22 +175,17 @@ public class SupermarketServlet extends HttpServlet {
     for (int i =0; i < urlParts.length; i++) {
       switch (i) {
         // actually, I don't really need to check for 0 because servlet mapping specifies /purchase/*
-        case 1: case 3: case 5:
+        case 1: case 3:
           //System.out.println(urlParts[i]);
-          if (!isNumberValid(urlParts[i])) {
-            return false;
-          }
+          if (!isNumberValid(urlParts[i])) { return false; }
           break;
         case 2:
-          if (!isStringValid(urlParts[i], "customer")) {
-            return false;
-          }
+          if (!isStringValid(urlParts[i], "customer")) { return false; }
           break;
         case 4:
-          if (!isStringValid(urlParts[i], "date")) {
-            return false;
-          }
-        // TODO: implement a better validation method for date
+          if (!isStringValid(urlParts[i], "date")) { return false; }
+        case 5:
+          if (!isDateValid(urlParts[i])) { return false; }
       }
     }
     return true;
@@ -161,6 +222,16 @@ public class SupermarketServlet extends HttpServlet {
 
   private boolean isStringValid(String string1, String string2) {
     return string1.equals(string2);
+  }
+
+  private boolean isDateValid(String dateInString) {
+    try {
+      LocalDate.parse(dateInString, DateTimeFormatter.BASIC_ISO_DATE);
+      return true;
+    } catch (DateTimeParseException e){
+      e.printStackTrace();
+      throw e;
+    }
   }
 
 }
