@@ -13,6 +13,11 @@ import obsolete.ProtoPurchase;
 @WebServlet(name = "Servlet")
 public class SupermarketServlet extends HttpServlet {
 
+  public void init() throws ServletException {
+    // TODO 1: In the init() method, initialize the connection (this is the socket, so is slow)
+    // TODO 2: create a channel pool that shares a bunch of pre-created channels
+  }
+
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     res.setContentType("text/plain");
     String urlPath = req.getPathInfo();
@@ -50,6 +55,7 @@ public class SupermarketServlet extends HttpServlet {
       return;
     }
 
+    // TODO 3.1: Lift this up to the Purchase microservice (separate project)
     // now try creating the purchase POJO object from the json string
     Purchase purchase = readRequestBody(reqBody, storeID, custID, purchaseDate);
 
@@ -59,6 +65,7 @@ public class SupermarketServlet extends HttpServlet {
       return;
     }
 
+    // TODO 3: In the dopost(), create a channel and use that to publish to RabbitMQ. Close it at end of the request
     try {
       PurchaseDao dao = new PurchaseDao();
       dao.createPurchaseInDB(purchase);
