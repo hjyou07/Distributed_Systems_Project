@@ -1,4 +1,5 @@
 import com.google.gson.*;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -6,7 +7,6 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.concurrent.TimeoutException;
@@ -30,6 +30,7 @@ public class SupermarketServlet extends HttpServlet {
   private Connection conn;
   private ChannelFactory channelFactory = new ChannelFactory();
   private ObjectPool<Channel> channelPool;
+  private final String EXCHANGE_NAME = "micro";
 
     public class ChannelFactory extends BasePooledObjectFactory<Channel> {
       /**
@@ -119,7 +120,33 @@ public class SupermarketServlet extends HttpServlet {
       return;
     }
 
-    // TODO 3.1: Lift this up to the Purchase microservice (separate project)
+    // TODO 3: In the dopost(), create a channel and use that to publish to RabbitMQ. Close it at end of the request
+    // I'm using pool instead. Simply call borrowObject to obtain the channel, and then call returnObject when we're done with it.
+    // Do I need to define any behavior upon return?
+    Channel channel = null;
+    try {
+      channel = channelPool.borrowObject();
+      // TODO 3.1: declare exchange: fanout
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+      // TODO 3.2: publish to the exchange
+      channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
+      System.out.println("publish to exchange successful");
+    } catch (Exception e) {
+      e.printStackTrace();
+      res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      res.getWriter().write("Unable to publish to rabbitmq exchange");
+    } finally {
+      if (channel != null) {
+        try {
+          channelPool.returnObject(channel);
+        } catch (Exception e) {
+          e.printStackTrace();
+          // TODO: How should I handle this?
+        }
+      }
+    }
+
+    // TODO 4: Lift this up to the Purchase microservice (separate project)
     // now try creating the purchase POJO object from the json string
     Purchase purchase = readRequestBody(reqBody, storeID, custID, purchaseDate);
 
@@ -129,9 +156,6 @@ public class SupermarketServlet extends HttpServlet {
       return;
     }
 
-    // TODO 3: In the dopost(), create a channel and use that to publish to RabbitMQ. Close it at end of the request
-    // I'm using pool instead. Simply call borrowObject to obtain the buffer, and then call returnObject when we're done with it.
-    // Do I need to define any behavior upon return?
     try {
       PurchaseDao dao = new PurchaseDao();
       dao.createPurchaseInDB(purchase);
@@ -152,7 +176,7 @@ public class SupermarketServlet extends HttpServlet {
     String[] parts = url.split("/");
     if (!isUrlValid(parts)) {
       res.setStatus(resCode);
-      res.getWriter().write("Bad parameters");
+      res.getWriter().write("Bad parameters in the url");
       return new String[]{};
     }
     return parts;
@@ -184,8 +208,10 @@ public class SupermarketServlet extends HttpServlet {
           break;
         case 4:
           if (!isStringValid(urlParts[i], "date")) { return false; }
+          break;
         case 5:
           if (!isDateValid(urlParts[i])) { return false; }
+          break;
       }
     }
     return true;
@@ -229,8 +255,7 @@ public class SupermarketServlet extends HttpServlet {
       LocalDate.parse(dateInString, DateTimeFormatter.BASIC_ISO_DATE);
       return true;
     } catch (DateTimeParseException e){
-      e.printStackTrace();
-      throw e;
+      return false;
     }
   }
 
