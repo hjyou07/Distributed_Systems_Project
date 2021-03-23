@@ -62,6 +62,7 @@ public class SupermarketServlet extends HttpServlet {
       conn = factory.newConnection();
     } catch (IOException e) {
       e.printStackTrace();
+      // exit(1)
     } catch (TimeoutException e) {
       e.printStackTrace();
     }
@@ -98,20 +99,15 @@ public class SupermarketServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     res.setContentType("plain/text");
     String urlPath = req.getPathInfo();
-
-    int storeID;
-    int custID;
-    String purchaseDate;
-
     // check the incoming url
     String[] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND,
         "Missing parameters");
     if (urlParts.length == 0)
       return;
 
-    storeID = Integer.valueOf(urlParts[1]);
-    custID = Integer.valueOf(urlParts[3]);
-    purchaseDate = urlParts[5];
+    String storeID = urlParts[1];
+    String custID = urlParts[3];
+    String purchaseDate = urlParts[5];
 
     // check request body, .lines() returns Stream<String>, .collect() returns String
     BufferedReader reqBodyBuffer = req.getReader();
@@ -119,6 +115,8 @@ public class SupermarketServlet extends HttpServlet {
     if (checkNull(reqBody, res, HttpServletResponse.SC_BAD_REQUEST, "Missing requestBody")) {
       return;
     }
+    // find some char I can use as a delimiter that won't be in JSON string
+    reqBody = reqBody.concat("#").concat(storeID).concat("#").concat(custID).concat("#").concat(purchaseDate);
 
     // TODO 3: In the dopost(), create a channel and use that to publish to RabbitMQ. Close it at end of the request
     // I'm using pool instead. Simply call borrowObject to obtain the channel, and then call returnObject when we're done with it.
@@ -130,6 +128,7 @@ public class SupermarketServlet extends HttpServlet {
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
       // TODO 3.2: publish to the exchange
       channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
+      System.out.println(reqBody);
       System.out.println("publish to exchange successful");
     } catch (Exception e) {
       e.printStackTrace();
@@ -141,34 +140,13 @@ public class SupermarketServlet extends HttpServlet {
           channelPool.returnObject(channel);
         } catch (Exception e) {
           e.printStackTrace();
-          // TODO: How should I handle this?
+          // TODO: How should I handle this? -> swallow
         }
       }
     }
-
-    // TODO 4: Lift this up to the Purchase microservice (separate project)
-    // now try creating the purchase POJO object from the json string
-    Purchase purchase = readRequestBody(reqBody, storeID, custID, purchaseDate);
-
-    if (!isRequestValid(purchase)) {
-      res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      res.getWriter().write("Bad requestBody");
-      return;
-    }
-
-    try {
-      PurchaseDao dao = new PurchaseDao();
-      dao.createPurchaseInDB(purchase);
-      res.setStatus(
-          HttpServletResponse.SC_CREATED); // if url valid, status code: 201 Write Successful
-      res.getWriter().write(String.format("echoing the request body: %s", purchase.items));
-    } catch (SQLException e) {
-      res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      res.getWriter().write("There was a problem writing to the DB");
-    } catch (Exception e) {
-      System.err.println("PurchaseDao can't be created");
-      e.printStackTrace();
-    }
+    res.setStatus(HttpServletResponse.SC_CREATED);
+    res.getWriter().write("Record passed to the database");
+    // TODO 4: Return appropriate response back - asynchronous?
   }
 
   private String[] isTotalURLValid(String url, HttpServletResponse res, int resCode, String nullMessage) throws IOException {
