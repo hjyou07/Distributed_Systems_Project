@@ -60,12 +60,14 @@ public class SupermarketServlet extends HttpServlet {
     factory.setHost("localhost"); // TODO: Consider using System.Property from catalina.properties
     try {
       conn = factory.newConnection();
+      // TODO 4.1: create a dummy channel
     } catch (IOException e) {
       e.printStackTrace();
       // exit(1)
     } catch (TimeoutException e) {
       e.printStackTrace();
     }
+    // TODO 4.2: declare exchange
     // TODO 2: create a channel pool that shares a bunch of pre-created channels
     channelPool = new GenericObjectPool<>(channelFactory);
   }
@@ -81,6 +83,7 @@ public class SupermarketServlet extends HttpServlet {
     if (channelPool != null) {
       channelPool.close();
     }
+    // TODO 5: close dummy channel
   }
 
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -125,6 +128,7 @@ public class SupermarketServlet extends HttpServlet {
     try {
       channel = channelPool.borrowObject();
       // TODO 3.1: declare exchange: fanout
+      // TODO: 4: I can lift this off! Create a dummy channel in init just to declare the exchange
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
       // TODO 3.2: publish to the exchange
       channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
