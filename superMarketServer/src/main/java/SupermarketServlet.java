@@ -31,6 +31,9 @@ public class SupermarketServlet extends HttpServlet {
   private ChannelFactory channelFactory = new ChannelFactory();
   private ObjectPool<Channel> channelPool;
   private final String EXCHANGE_NAME = "micro";
+  private final String USERNAME = System.getProperty("RABBIT_USERNAME");
+  private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
+  private final String HOST = System.getProperty("RABBIT_HOST");
 
     public class ChannelFactory extends BasePooledObjectFactory<Channel> {
       /**
@@ -57,7 +60,11 @@ public class SupermarketServlet extends HttpServlet {
   public void init() throws ServletException {
     // TODO 1: In the init() method, initialize the connection (this is the socket, so is slow)
     factory = new ConnectionFactory();
-    factory.setHost("localhost"); // TODO: Consider using System.Property from catalina.properties
+    // factory.setHost("localhost"); // TODO: Consider using System.Property from catalina.properties
+    factory.setUsername(USERNAME);
+    factory.setPassword(PASSWORD);
+    factory.setHost(HOST);
+
     try {
       conn = factory.newConnection();
       // TODO 4.1: create a dummy channel
