@@ -132,8 +132,10 @@ public class SupermarketServlet extends HttpServlet {
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
       // TODO 3.2: publish to the exchange
       channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
-      System.out.println(reqBody);
-      System.out.println("publish to exchange successful");
+      // System.out.println(reqBody);
+      // System.out.println("publish to exchange successful");
+      res.setStatus(HttpServletResponse.SC_CREATED);
+      res.getWriter().write("Record passed to the database");
     } catch (Exception e) {
       e.printStackTrace();
       res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -148,8 +150,6 @@ public class SupermarketServlet extends HttpServlet {
         }
       }
     }
-    res.setStatus(HttpServletResponse.SC_CREATED);
-    res.getWriter().write("Record passed to the database");
     // TODO 4: Return appropriate response back - asynchronous?
   }
 

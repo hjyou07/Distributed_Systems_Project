@@ -85,7 +85,7 @@ public class DBWriter implements Runnable {
 
     private Purchase readRequestBody(String reqBody) {
       String[] parsed = reqBody.split("#");
-      for (String s : parsed) { System.out.println(s); }
+      // for (String s : parsed) { System.out.println(s); }
       String items = parsed[0];
       int storeID = Integer.valueOf(parsed[1]);
       int custID = Integer.valueOf(parsed[2]);

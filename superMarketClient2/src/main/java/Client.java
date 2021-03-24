@@ -129,7 +129,7 @@ public class Client {
             date = args[i];
             break;
           case 2:
-            serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
+            serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war_exploded");
             //validateServerAddr(serverAddress);
             break;
         }
@@ -163,7 +163,7 @@ public class Client {
             date = args[i];
             break;
           case 6:
-            serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
+            serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war_exploded");
             //validateServerAddr(serverAddress);
             break;
         }

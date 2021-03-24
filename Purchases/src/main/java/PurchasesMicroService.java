@@ -13,9 +13,11 @@ public class PurchasesMicroService {
     factory.setHost("localhost"); // TODO: use properties file
     ExecutorService dbWriterPool = Executors.newFixedThreadPool(60); // match the dbcp poolSize
 
+
     Connection conn = null;
     try {
       conn = factory.newConnection(dbWriterPool);
+      long Start = System.currentTimeMillis();
       for (int i=0; i < 65; i++) {
         dbWriterPool.execute(new DBWriter(conn, QUEUE_NAME, EXCHANGE_NAME));
       }
