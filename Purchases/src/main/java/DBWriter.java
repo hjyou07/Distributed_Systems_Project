@@ -10,12 +10,10 @@ import java.sql.SQLException;
 public class DBWriter implements Runnable {
   private Connection conn;
   private String QUEUE_NAME = "dbwriter";
-  private String EXCHANGE_NAME = "micro";
 
-  public DBWriter(Connection conn, String QUEUE_NAME, String EXCHANGE_NAME) {
+  public DBWriter(Connection conn, String QUEUE_NAME) {
     this.conn = conn;
     this.QUEUE_NAME = QUEUE_NAME;
-    this.EXCHANGE_NAME = EXCHANGE_NAME;
   }
 
   @Override
@@ -23,8 +21,6 @@ public class DBWriter implements Runnable {
     Channel channel = null;
    try {
      channel = conn.createChannel();
-     // TODO 3: lift this off by creating a dummy channel in PurchasesMicroService
-     channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
      /* queueDeclare() parameters
       queue - the name of the queue
       durable - true if we are declaring a durable queue (the queue will survive a server restart)
@@ -32,9 +28,6 @@ public class DBWriter implements Runnable {
       autoDelete - true if we are declaring an autodelete queue (server will delete it when no longer in use)
       arguments - other properties (construction arguments) for the queue
      */
-     channel.queueDeclare(QUEUE_NAME, false, true, false, null);
-     // TODO 3.1: this too
-     channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
      // max one message per receiver
      channel.basicQos(1);
 
@@ -45,8 +38,6 @@ public class DBWriter implements Runnable {
    } catch (IOException e) {
      e.printStackTrace();
    }
-   // TODO: closing channel got me a bunch of errors, where and when should I close it?
-
   }
 
   public class ChannelConsumer extends DefaultConsumer {

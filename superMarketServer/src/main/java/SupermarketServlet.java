@@ -60,23 +60,26 @@ public class SupermarketServlet extends HttpServlet {
   public void init() throws ServletException {
     // TODO 1: In the init() method, initialize the connection (this is the socket, so is slow)
     factory = new ConnectionFactory();
-    // factory.setHost("localhost"); // TODO: Consider using System.Property from catalina.properties
-    factory.setUsername(USERNAME);
-    factory.setPassword(PASSWORD);
-    factory.setHost(HOST);
+    boolean isLocal = true;
+    if (isLocal) { factory.setHost("localhost"); } else {
+      factory.setUsername(USERNAME);
+      factory.setPassword(PASSWORD);
+      factory.setHost(HOST);
+    }
 
+    Channel channel = null;
     try {
       conn = factory.newConnection();
+      // TODO 2: create a channel pool that shares a bunch of pre-created channels
+      channelPool = new GenericObjectPool<>(channelFactory);
       // TODO 4.1: create a dummy channel
-    } catch (IOException e) {
+      channel = channelPool.borrowObject();
+      // TODO 4.2: declare exchange: fanout
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+    } catch (Exception e) {
       e.printStackTrace();
-      // exit(1)
-    } catch (TimeoutException e) {
-      e.printStackTrace();
+      System.exit(1);
     }
-    // TODO 4.2: declare exchange
-    // TODO 2: create a channel pool that shares a bunch of pre-created channels
-    channelPool = new GenericObjectPool<>(channelFactory);
   }
 
   public void destroy() {
@@ -129,14 +132,9 @@ public class SupermarketServlet extends HttpServlet {
     reqBody = reqBody.concat("#").concat(storeID).concat("#").concat(custID).concat("#").concat(purchaseDate);
 
     // TODO 3: In the dopost(), create a channel and use that to publish to RabbitMQ. Close it at end of the request
-    // I'm using pool instead. Simply call borrowObject to obtain the channel, and then call returnObject when we're done with it.
-    // Do I need to define any behavior upon return?
     Channel channel = null;
     try {
       channel = channelPool.borrowObject();
-      // TODO 3.1: declare exchange: fanout
-      // TODO: 4: I can lift this off! Create a dummy channel in init just to declare the exchange
-      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
       // TODO 3.2: publish to the exchange
       channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
       // System.out.println(reqBody);

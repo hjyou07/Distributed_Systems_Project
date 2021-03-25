@@ -1,3 +1,4 @@
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -15,38 +16,41 @@ public class PurchasesMicroService {
   private static final String PASSWORD = "RABBIT_PASSWORD";
   private static final String HOST = "RABBIT_HOST";
   private static final String FILE_PATH = "/Users/heej/Desktop/Spring2021/BSDS/Project/Purchases/src/main/resources/config.properties";
+  private static final boolean isLocal = true;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    try (InputStream input = new FileInputStream(FILE_PATH)) {
-      Properties prop = new Properties();
-      // load a properties file
-      prop.load(input);
-      factory.setUsername(prop.getProperty(USERNAME));
-      factory.setPassword(prop.getProperty(PASSWORD));
-      factory.setHost(prop.getProperty(HOST));
-    } catch (IOException e) {
-      e.printStackTrace();
-      throw e;
+    if (isLocal) { factory.setHost("localhost"); } else {
+      try (InputStream input = new FileInputStream(FILE_PATH)) {
+        Properties prop = new Properties();
+        // load properties file
+        prop.load(input);
+        factory.setUsername(prop.getProperty(USERNAME));
+        factory.setPassword(prop.getProperty(PASSWORD));
+        factory.setHost(prop.getProperty(HOST));
+      } catch (IOException e) {
+        e.printStackTrace();
+        throw e;
+      }
     }
-    // factory.setHost("localhost"); // TODO: use properties file
     ExecutorService dbWriterPool = Executors.newFixedThreadPool(60); // match the dbcp poolSize
 
 
     Connection conn = null;
+    Channel channel = null;
     try {
       conn = factory.newConnection(dbWriterPool);
-      long Start = System.currentTimeMillis();
+      channel = conn.createChannel();
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+      channel.queueDeclare(QUEUE_NAME, false, true, false, null);
+      channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
+      System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
       for (int i=0; i < 65; i++) {
-        dbWriterPool.execute(new DBWriter(conn, QUEUE_NAME, EXCHANGE_NAME));
+        dbWriterPool.execute(new DBWriter(conn, QUEUE_NAME));
       }
     } catch (Exception e) {
       e.printStackTrace();
       throw e;
     }
-    // wrap up, tells the ExecutorService not to accept any more tasks to run
-    // dbWriterPool.shutdown();
-    // blocks the calling thread until all threads are idle and no more work is waiting in the queue
-    // dbWriterPool.awaitTermination(10, TimeUnit.SECONDS);
   }
 }
