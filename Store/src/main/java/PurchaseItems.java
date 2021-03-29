@@ -1,5 +1,3 @@
-package obsolete;
-
 import com.google.gson.annotations.*;
 import java.util.Objects;
 

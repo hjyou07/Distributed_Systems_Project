@@ -1,5 +1,4 @@
 import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DefaultConsumer;
@@ -9,7 +8,7 @@ import java.sql.SQLException;
 
 public class DBWriter implements Runnable {
   private Connection conn;
-  private String QUEUE_NAME = "dbwriter";
+  private String QUEUE_NAME = "dbWriter";
 
   public DBWriter(Connection conn, String QUEUE_NAME) {
     this.conn = conn;

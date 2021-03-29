@@ -1,5 +1,3 @@
-package obsolete;
-
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,16 +6,16 @@ import java.util.Objects;
 /**
  This pojo class represents a Purchase model that is compatible with Swagger API
  */
-public class ProtoPurchase {
+public class Purchase {
   @SerializedName("items")
   protected List<PurchaseItems> items = null;
 
-  public ProtoPurchase items(List<PurchaseItems> items) {
+  public Purchase items(List<PurchaseItems> items) {
     this.items = items;
     return this;
   }
 
-  public ProtoPurchase addItemsItem(PurchaseItems itemsItem) {
+  public Purchase addItemsItem(PurchaseItems itemsItem) {
     if (this.items == null) {
       this.items = new ArrayList<PurchaseItems>();
     }
@@ -50,7 +48,7 @@ public class ProtoPurchase {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ProtoPurchase purchase = (ProtoPurchase) o;
+    Purchase purchase = (Purchase) o;
     return Objects.equals(this.items, purchase.items);
   }
 
@@ -63,7 +61,7 @@ public class ProtoPurchase {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ProtoPurchase {\n");
+    sb.append("class Purchase {\n");
 
     sb.append("    items: ").append(toIndentedString(items)).append("\n");
     sb.append("}");

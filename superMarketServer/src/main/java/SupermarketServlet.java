@@ -1,11 +1,9 @@
-import com.google.gson.*;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
 import java.io.BufferedReader;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -16,7 +14,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import obsolete.ProtoPurchase;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.PooledObject;
@@ -29,6 +26,7 @@ public class SupermarketServlet extends HttpServlet {
   private ConnectionFactory factory;
   private Connection conn;
   private ChannelFactory channelFactory = new ChannelFactory();
+  private Channel dummychannel;
   private ObjectPool<Channel> channelPool;
   private final String EXCHANGE_NAME = "micro";
   private final String USERNAME = System.getProperty("RABBIT_USERNAME");
@@ -67,15 +65,15 @@ public class SupermarketServlet extends HttpServlet {
       factory.setHost(HOST);
     }
 
-    Channel channel = null;
+    dummychannel = null;
     try {
       conn = factory.newConnection();
       // TODO 2: create a channel pool that shares a bunch of pre-created channels
       channelPool = new GenericObjectPool<>(channelFactory);
       // TODO 4.1: create a dummy channel
-      channel = channelPool.borrowObject();
+      dummychannel = channelPool.borrowObject();
       // TODO 4.2: declare exchange: fanout
-      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+      dummychannel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
@@ -90,10 +88,15 @@ public class SupermarketServlet extends HttpServlet {
         e.printStackTrace();
       }
     }
-    if (channelPool != null) {
-      channelPool.close();
-    }
+    if (channelPool != null) { channelPool.close(); }
     // TODO 5: close dummy channel
+    if (dummychannel != null) {
+      try {
+        dummychannel.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -105,7 +108,7 @@ public class SupermarketServlet extends HttpServlet {
     if (urlParts.length != 0) {
       res.setStatus(HttpServletResponse.SC_OK);
       res.getWriter().write("It works!");
-      // do any sophisticated processing with urlParts which contains all the url params TODO: process url params in 'urlParts'
+      // do any sophisticated processing with urlParts which contains all the url params
     }
   }
 
@@ -202,26 +205,6 @@ public class SupermarketServlet extends HttpServlet {
       }
     }
     return true;
-  }
-
-  private boolean isRequestValid(Purchase purchase) {
-    // TODO: implement a validation for the ProtoPurchase POJO created by request body
-    return true;
-  }
-
-  private Purchase readRequestBody(String reqBody, int storeID, int custID, String purchaseDate) {
-    return new Purchase(storeID, custID, purchaseDate, reqBody);
-  }
-
-  private ProtoPurchase readRequestBody(String reqBody, HttpServletResponse res) throws IOException {
-    try {
-      ProtoPurchase purchase = new Gson().fromJson(reqBody, ProtoPurchase.class);
-      return purchase;
-    } catch(Exception e) {
-      System.err.println(e.getMessage());
-      res.getWriter().write("Bad requestBody, can't create a ProtoPurchase");
-    }
-    return null;
   }
 
   private boolean isNumberValid(String string) {

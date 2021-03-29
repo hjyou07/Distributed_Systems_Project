@@ -9,8 +9,9 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class PurchasesMicroService {
-  private static final String QUEUE_NAME = "dbWriter";
+public class StoreMicroService {
+  private static final String RPC_QUEUE_NAME = "getRequestQueue";
+  private static final String QUEUE_NAME = "dataProcessor";
   private static final String EXCHANGE_NAME = "micro";
   private static final String USERNAME = "RABBIT_USERNAME";
   private static final String PASSWORD = "RABBIT_PASSWORD";
@@ -33,20 +34,20 @@ public class PurchasesMicroService {
         throw e;
       }
     }
-    ExecutorService dbWriterPool = Executors.newFixedThreadPool(60); // match the dbcp poolSize
+    ExecutorService dataProcessorPool = Executors.newFixedThreadPool(10); // TODO: How should I configure this?
 
 
     Connection conn = null;
     Channel channel = null;
     try {
-      conn = factory.newConnection(dbWriterPool);
+      conn = factory.newConnection(dataProcessorPool);
       channel = conn.createChannel();
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
       channel.queueDeclare(QUEUE_NAME, false, true, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-      for (int i=0; i < 65; i++) {
-        dbWriterPool.execute(new DBWriter(conn, QUEUE_NAME));
+      for (int i=0; i < 10; i++) {
+        dataProcessorPool.execute(new DataProcessor(conn, QUEUE_NAME));
       }
     } catch (Exception e) {
       e.printStackTrace();
