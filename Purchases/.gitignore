@@ -1,2 +1,6 @@
 *.xml
 *.iml
+target/
+resources/
+*.java
+.idea
