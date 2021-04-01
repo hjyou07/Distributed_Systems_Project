@@ -8,7 +8,7 @@ import java.util.Objects;
  */
 public class Purchase {
   @SerializedName("items")
-  protected List<PurchaseItems> items = null;
+  protected List<PurchaseItems> items;
 
   public Purchase items(List<PurchaseItems> items) {
     this.items = items;

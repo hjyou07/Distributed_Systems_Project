@@ -2,21 +2,21 @@ import com.google.gson.annotations.*;
 import java.util.Objects;
 
 public class PurchaseItems {
-  @SerializedName("ItemID")
-  protected String itemID;
-  @SerializedName("numberOfItems:")
+  @SerializedName("itemID")
+  protected Integer itemID;
+  @SerializedName("numberOfItems")
   protected Integer numberOfItems;
 
-  public PurchaseItems(String itemID, int numberOfItems) {
+  public PurchaseItems(int itemID, int numberOfItems) {
     this.itemID = itemID;
     this.numberOfItems = numberOfItems;
   }
 
-  public String getItemID() {
+  public Integer getItemID() {
     return itemID;
   }
 
-  public void setItemID(String itemID) {
+  public void setItemID(int itemID) {
     this.itemID = itemID;
   }
 
@@ -24,7 +24,7 @@ public class PurchaseItems {
     return numberOfItems;
   }
 
-  public void setNumberOfItems(Integer numberOfItems) {
+  public void setNumberOfItems(int numberOfItems) {
     this.numberOfItems = numberOfItems;
   }
 

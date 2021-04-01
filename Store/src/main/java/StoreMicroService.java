@@ -43,7 +43,7 @@ public class StoreMicroService {
       conn = factory.newConnection(dataProcessorPool);
       channel = conn.createChannel();
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
-      channel.queueDeclare(QUEUE_NAME, false, true, false, null);
+      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
       for (int i=0; i < 10; i++) {
