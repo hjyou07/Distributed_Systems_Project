@@ -33,7 +33,7 @@ public class PurchasesMicroService {
         throw e;
       }
     }
-    ExecutorService dbWriterPool = Executors.newFixedThreadPool(60); // match the dbcp poolSize
+    ExecutorService dbWriterPool = Executors.newFixedThreadPool(400);
 
 
     Connection conn = null;
@@ -42,7 +42,7 @@ public class PurchasesMicroService {
       conn = factory.newConnection(dbWriterPool);
       channel = conn.createChannel();
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
-      channel.queueDeclare(QUEUE_NAME, false, true, false, null);
+      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
       for (int i=0; i < 65; i++) {
