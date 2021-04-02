@@ -5,17 +5,24 @@ import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.PriorityQueue;
+import org.javatuples.Pair;
 
 public class DataProcessor implements Runnable {
 
+  private static final int NUM_ITEMS = 100000;
+  private static final int NUM_STORES = 512;
   private Connection conn;
   private String QUEUE_NAME;
-  private StoreInfo cache = StoreInfo.getInstance();
+  private int[][] itemByStore;
 
-  public DataProcessor(Connection conn, String QUEUE_NAME) {
+  public DataProcessor(Connection conn, String QUEUE_NAME, int[][] cache) {
     this.conn = conn;
     this.QUEUE_NAME = QUEUE_NAME;
+    this.itemByStore = cache;
   }
 
   @Override
@@ -34,14 +41,15 @@ public class DataProcessor implements Runnable {
         int storeID = purchaseInfo.getStoreID();
         List<PurchaseItems> items = purchaseInfo.getPurchaseItems();
         for (PurchaseItems i : items) {
-          System.out.println("trying to write to cache");
-          cache.putSalesInfo(storeID, i.getItemID(), i.getNumberOfItems());
-          System.out.println("wrote to cache");
+          int row = i.getItemID() -1; int col = storeID -1;
+          synchronized (itemByStore[row]) {
+            itemByStore[row][col] += i.getNumberOfItems();
+          }
         }
         // TODO: basicReject too? idk -> yes in exception
         channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-        cache.getTopFiveStores(101);
-        cache.getTopTenItems(1);
+        getTopFiveStores(101);
+        getTopTenItems(1);
       };
 
       channel.basicConsume(QUEUE_NAME, deliverCallback, consumerTag -> {});
@@ -66,4 +74,65 @@ public class DataProcessor implements Runnable {
       throw e;
     }
   }
+
+  private void simplePutCheck() {
+    int total = 0;
+    for (int[] item : itemByStore) {
+      for (int quantity : item) {
+        total += quantity;
+      }
+    }
+    System.out.println("total quant" + total);
+  }
+
+  public String getTopTenItems(int storeID) {
+    final int heapSize =10;
+    int col = storeID - 1;
+
+    PriorityQueue<Pair<Integer,Integer>> topTen = new PriorityQueue<>(heapSize);
+    for (int i=0; i<heapSize; i++) {
+      topTen.add(new Pair<>(i+1, itemByStore[i][col]));
+    }
+    for (int i=heapSize; i<NUM_ITEMS; i++) {
+      if (topTen.peek().getValue1() <= itemByStore[i][col]) {
+        topTen.poll();
+        topTen.add(new Pair<>(i+1, itemByStore[i][col]));
+      }
+    }
+    System.out.println(itemByStore[111][col]);
+    return writeResponseBody(topTen, "itemID");
+  }
+
+  public String getTopFiveStores(int itemID) {
+    final int heapSize = 5;
+    int row = itemID - 1;
+
+    PriorityQueue<Pair<Integer,Integer>> topFive = new PriorityQueue<>(heapSize);
+    for (int i=0; i<heapSize; i++) {
+      topFive.add(new Pair<>(i+1, itemByStore[row][i]));
+    }
+    for (int i=heapSize; i<NUM_STORES; i++) {
+      if (topFive.peek().getValue1() <= itemByStore[row][i]) {
+        topFive.poll();
+        topFive.add(new Pair<>(i+1, itemByStore[row][i]));
+      }
+    }
+    return writeResponseBody(topFive, "storeID");
+  }
+
+  private String writeResponseBody(PriorityQueue<Pair<Integer,Integer>> topResult, String key) {
+    StringBuilder res = new StringBuilder();
+    List<Pair<Integer,Integer>> formattedArr = new ArrayList<>(topResult);
+    formattedArr.sort(new PairComparator());
+    res.append("{\"stores\": [" + System.lineSeparator());
+    for (Pair<Integer,Integer> p : formattedArr) {
+      res.append(String.format("\t{\"%s\":%d, \"numberOfItems\":%d}", key, p.getValue0(), p.getValue1()));
+      res.append("," + System.lineSeparator());
+    }
+    res.delete(res.lastIndexOf(","),res.lastIndexOf(System.lineSeparator()));
+    res.append("]}");
+    System.out.println(res.toString());
+    return res.toString();
+  }
+
 }

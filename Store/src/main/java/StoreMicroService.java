@@ -18,6 +18,8 @@ public class StoreMicroService {
   private static final String HOST = "RABBIT_HOST";
   private static final String FILE_PATH = "/Users/heej/Desktop/Spring2021/BSDS/Project/Purchases/src/main/resources/config.properties";
   private static final boolean isLocal = true;
+  private static final int NUM_ITEMS = 100000;
+  private static final int NUM_STORES = 512;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
@@ -34,7 +36,7 @@ public class StoreMicroService {
         throw e;
       }
     }
-    ExecutorService dataProcessorPool = Executors.newFixedThreadPool(10); // TODO: How should I configure this?
+    ExecutorService dataProcessorPool = Executors.newFixedThreadPool(1); // TODO: How should I configure this?
 
 
     Connection conn = null;
@@ -46,8 +48,9 @@ public class StoreMicroService {
       channel.queueDeclare(QUEUE_NAME, false, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-      for (int i=0; i < 10; i++) {
-        dataProcessorPool.execute(new DataProcessor(conn, QUEUE_NAME));
+      int[][] itemByStore = new int[NUM_ITEMS][NUM_STORES];
+      for (int i=0; i < 1; i++) {
+        dataProcessorPool.execute(new DataProcessor(conn, QUEUE_NAME, itemByStore));
       }
     } catch (Exception e) {
       e.printStackTrace();
