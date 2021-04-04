@@ -16,7 +16,7 @@ public class PurchasesMicroService {
   private static final String PASSWORD = "RABBIT_PASSWORD";
   private static final String HOST = "RABBIT_HOST";
   private static final String FILE_PATH = "/Users/heej/Desktop/Spring2021/BSDS/Project/Purchases/src/main/resources/config.properties";
-  private static final boolean isLocal = true;
+  private static final boolean isLocal = false;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
