@@ -17,7 +17,7 @@ public class StoreMicroService {
   private static final String PASSWORD = "RABBIT_PASSWORD";
   private static final String HOST = "RABBIT_HOST";
   private static final String FILE_PATH = "/Users/heej/Desktop/Spring2021/BSDS/Project/Purchases/src/main/resources/config.properties";
-  private static final boolean isLocal = true;
+  private static final boolean isLocal = false;
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;
 
@@ -36,22 +36,25 @@ public class StoreMicroService {
         throw e;
       }
     }
-    ExecutorService dataProcessorPool = Executors.newFixedThreadPool(1); // TODO: How should I configure this?
-
+    ExecutorService dataProcessorPool = Executors.newFixedThreadPool(500); // TODO: How should I configure this?
 
     Connection conn = null;
     Channel channel = null;
     try {
       conn = factory.newConnection(dataProcessorPool);
       channel = conn.createChannel();
+      // prep for Purchases processing, dummy channel for exchangeDeclare and queueBind
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
       channel.queueDeclare(QUEUE_NAME, false, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
       int[][] itemByStore = new int[NUM_ITEMS][NUM_STORES];
-      for (int i=0; i < 1; i++) {
+      // run threads for Purchase processing
+      for (int i=0; i < 500; i++) {
         dataProcessorPool.execute(new DataProcessor(conn, QUEUE_NAME, itemByStore));
       }
+      // run a thread RMI GET requests - my RMIProcessor is single-threaded
+      new Thread(new RMIProcessor(conn, RPC_QUEUE_NAME, itemByStore)).start();
     } catch (Exception e) {
       e.printStackTrace();
       throw e;

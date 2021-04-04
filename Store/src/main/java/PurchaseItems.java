@@ -2,9 +2,9 @@ import com.google.gson.annotations.*;
 import java.util.Objects;
 
 public class PurchaseItems {
-  @SerializedName("itemID")
+  @SerializedName("ItemID")
   protected Integer itemID;
-  @SerializedName("numberOfItems")
+  @SerializedName("numberOfItems:")
   protected Integer numberOfItems;
 
   public PurchaseItems(int itemID, int numberOfItems) {
