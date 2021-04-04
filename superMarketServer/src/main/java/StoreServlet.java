@@ -1,3 +1,4 @@
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -7,8 +8,9 @@ import java.io.BufferedReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
+import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -29,6 +31,7 @@ public class StoreServlet extends HttpServlet {
   private Channel dummychannel;
   private ObjectPool<Channel> channelPool;
   private static final String RPC_QUEUE_NAME = "getRequestQueue";
+  private static final String REPLY_QUEUE = "getResponseQueue";
   private final String USERNAME = System.getProperty("RABBIT_USERNAME");
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
@@ -59,7 +62,6 @@ public class StoreServlet extends HttpServlet {
   }
 
   public void init() throws ServletException {
-    // TODO 1: In the init() method, initialize the connection (this is the socket, so is slow)
     factory = new ConnectionFactory();
     boolean isLocal = true;
     if (isLocal) {
@@ -73,11 +75,8 @@ public class StoreServlet extends HttpServlet {
     dummychannel = null;
     try {
       conn = factory.newConnection();
-      // TODO 2: create a channel pool that shares a bunch of pre-created channels
       channelPool = new GenericObjectPool<>(channelFactory);
-      // TODO 4.1: create a dummy channel
       dummychannel = channelPool.borrowObject();
-      // TODO 4.2: declare queue
       dummychannel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
     } catch (Exception e) {
       e.printStackTrace();
@@ -96,7 +95,6 @@ public class StoreServlet extends HttpServlet {
     if (channelPool != null) {
       channelPool.close();
     }
-    // TODO 5: close dummy channel
     if (dummychannel != null) {
       try {
         dummychannel.close();
@@ -110,12 +108,53 @@ public class StoreServlet extends HttpServlet {
     res.setContentType("text/plain");
     String urlPath = req.getPathInfo();
 
-    String[] urlParts = isTotalURLValid(urlPath, res, HttpServletResponse.SC_NOT_FOUND, "Missing parameters");
+    isTotalURLValid(urlPath, res, HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
 
-    if (urlParts.length != 0) {
-      res.setStatus(HttpServletResponse.SC_OK);
-      res.getWriter().write("It works!");
-      // do any sophisticated processing with urlParts which contains all the url params
+    final String corrId = UUID.randomUUID().toString();
+
+    Channel channel = null;
+    try {
+      channel = channelPool.borrowObject();
+      channel.queueDeclare(REPLY_QUEUE, false, false, false, null);
+      AMQP.BasicProperties props = new AMQP.BasicProperties
+          .Builder()
+          .correlationId(corrId)
+          .replyTo(REPLY_QUEUE)
+          .build();
+      channel.basicPublish("", RPC_QUEUE_NAME, props, urlPath.getBytes("UTF-8"));
+
+      final BlockingQueue<String> response = new ArrayBlockingQueue<>(1);
+
+      String ctag = channel.basicConsume(REPLY_QUEUE, true, (consumerTag, delivery) -> {
+        if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+          response.offer(new String(delivery.getBody(), "UTF-8"));
+        }
+      }, consumerTag -> {
+      });
+
+      String result = response.take();
+      channel.basicCancel(ctag);
+
+      if (result != null && result.length() != 0) {
+        res.setStatus(HttpServletResponse.SC_OK);
+        res.getWriter().write(result);
+      } else {
+        res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        res.getWriter().write("requested data not found");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      res.getWriter().write("unable to process query");
+    } finally {
+      if (channel != null) {
+        try {
+          channelPool.returnObject(channel);
+        } catch (Exception e) {
+          e.printStackTrace();
+          // TODO: How should I handle this? -> swallow
+        }
+      }
     }
   }
 
@@ -140,25 +179,18 @@ public class StoreServlet extends HttpServlet {
   }
 
   private boolean isUrlValid(String[] urlParts) {
-    // urlPath = "/purchase/{storeID}/customer/{custID}/date/yyyymmdd"
-    // check for the [, 001, customer, 001, date, 20210101]
-    // below checks for the ~/purchase/
-    if (urlParts.length == 0 || urlParts.length != 6) return false;
+    // urlPath = "/items/store/{storeID}" or "/items/top5/{itemID}"
+    // check for the [, store, 001] or [, top10, 101]
+    // below checks for the ~/items/
+    if (urlParts.length == 0 || urlParts.length != 3) return false;
     for (int i =0; i < urlParts.length; i++) {
       switch (i) {
         // actually, I don't really need to check for 0 because servlet mapping specifies /purchase/*
-        case 1: case 3:
-          //System.out.println(urlParts[i]);
-          if (!isNumberValid(urlParts[i])) { return false; }
+        case 1:
+          if (!(isStringValid(urlParts[i], "store") || isStringValid(urlParts[i], "top5"))) { return false; }
           break;
         case 2:
-          if (!isStringValid(urlParts[i], "customer")) { return false; }
-          break;
-        case 4:
-          if (!isStringValid(urlParts[i], "date")) { return false; }
-          break;
-        case 5:
-          if (!isDateValid(urlParts[i])) { return false; }
+          if (!isNumberValid(urlParts[i])) { return false; }
           break;
       }
     }

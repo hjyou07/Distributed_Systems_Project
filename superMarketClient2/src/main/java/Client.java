@@ -41,7 +41,7 @@ public class Client {
     // create store threads(producer) and assign storeID
     Store[] storeThreads = new Store[maxStores];
     for (int i=0; i < maxStores; i++) {
-      storeThreads[i] = new Store(i, csvBuffer, preprocessBuffer, centralPhaseSignal,westPhaseSignal,closeSignal);
+      storeThreads[i] = new Store(i+1, csvBuffer, preprocessBuffer, centralPhaseSignal,westPhaseSignal,closeSignal);
       if (date != null && serverAddress != null) {
         storeThreads[i].setServerAddress(serverAddress);
         storeThreads[i].setDate(date);

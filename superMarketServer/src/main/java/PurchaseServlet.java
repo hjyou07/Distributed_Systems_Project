@@ -32,6 +32,7 @@ public class PurchaseServlet extends HttpServlet {
   private final String USERNAME = System.getProperty("RABBIT_USERNAME");
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
+  private final boolean isLocal = true;
 
     public class ChannelFactory extends BasePooledObjectFactory<Channel> {
       /**
@@ -58,7 +59,7 @@ public class PurchaseServlet extends HttpServlet {
   public void init() throws ServletException {
     // TODO 1: In the init() method, initialize the connection (this is the socket, so is slow)
     factory = new ConnectionFactory();
-    boolean isLocal = true;
+
     if (isLocal) { factory.setHost("localhost"); } else {
       factory.setUsername(USERNAME);
       factory.setPassword(PASSWORD);
@@ -158,7 +159,6 @@ public class PurchaseServlet extends HttpServlet {
         }
       }
     }
-    // TODO 4: Return appropriate response back - asynchronous?
   }
 
   private String[] isTotalURLValid(String url, HttpServletResponse res, int resCode, String nullMessage) throws IOException {

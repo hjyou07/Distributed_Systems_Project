@@ -102,7 +102,7 @@ public class Store implements Runnable {
 
   private String randomItemID() {
     Random rand = new Random();
-    return String.valueOf(rand.nextInt(maxItemID));
+    return String.valueOf(rand.nextInt(maxItemID-1) + 1);
   }
 
   public void setNumCust(int numCust) {
