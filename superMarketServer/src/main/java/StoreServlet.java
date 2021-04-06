@@ -120,6 +120,7 @@ public class StoreServlet extends HttpServlet {
       channel.queueDeclare(REPLY_QUEUE, DURABLE, false, false, null);
       AMQP.BasicProperties props = new AMQP.BasicProperties
           .Builder()
+          .deliveryMode(PERSISTENT)
           .correlationId(corrId)
           .replyTo(REPLY_QUEUE)
           .build();

@@ -2,6 +2,7 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.MessageProperties;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.time.LocalDate;
@@ -141,7 +142,7 @@ public class PurchaseServlet extends HttpServlet {
     try {
       channel = channelPool.borrowObject();
       // TODO 3.2: publish to the exchange
-      channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
+      channel.basicPublish(EXCHANGE_NAME, "", MessageProperties.PERSISTENT_TEXT_PLAIN, reqBody.getBytes("UTF-8"));
       // System.out.println(reqBody);
       // System.out.println("publish to exchange successful");
       res.setStatus(HttpServletResponse.SC_CREATED);

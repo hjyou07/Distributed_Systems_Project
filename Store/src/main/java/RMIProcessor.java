@@ -10,6 +10,7 @@ public class RMIProcessor implements Runnable {
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;
   private final boolean DURABLE = true;
+  private final int PERSISTENT = 2;
   private Connection conn;
 
   private String QUEUE_NAME;
@@ -35,6 +36,7 @@ public class RMIProcessor implements Runnable {
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         AMQP.BasicProperties replyProps = new AMQP.BasicProperties
             .Builder()
+            .deliveryMode(PERSISTENT)
             .correlationId(delivery.getProperties().getCorrelationId())
             .build();
 
