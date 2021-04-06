@@ -20,6 +20,7 @@ public class StoreMicroService {
   private static final boolean isLocal = false;
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;
+  private static final boolean DURABLE = true;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
@@ -44,8 +45,8 @@ public class StoreMicroService {
       conn = factory.newConnection(dataProcessorPool);
       channel = conn.createChannel();
       // prep for Purchases processing, dummy channel for exchangeDeclare and queueBind
-      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
-      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT, DURABLE);
+      channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
       int[][] itemByStore = new int[NUM_ITEMS][NUM_STORES];

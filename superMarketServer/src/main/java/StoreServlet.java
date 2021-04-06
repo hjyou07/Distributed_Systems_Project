@@ -36,6 +36,8 @@ public class StoreServlet extends HttpServlet {
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
   private final boolean isLocal = false;
+  private final boolean DURABLE = true;
+  private final int PERSISTENT = 2;
 
   public class ChannelFactory extends BasePooledObjectFactory<Channel> {
 
@@ -77,7 +79,7 @@ public class StoreServlet extends HttpServlet {
       conn = factory.newConnection();
       channelPool = new GenericObjectPool<>(channelFactory);
       dummychannel = channelPool.borrowObject();
-      dummychannel.queueDeclare(RPC_QUEUE_NAME, false, false, false, null);
+      dummychannel.queueDeclare(RPC_QUEUE_NAME, DURABLE, false, false, null);
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
@@ -115,7 +117,7 @@ public class StoreServlet extends HttpServlet {
     Channel channel = null;
     try {
       channel = channelPool.borrowObject();
-      channel.queueDeclare(REPLY_QUEUE, false, false, false, null);
+      channel.queueDeclare(REPLY_QUEUE, DURABLE, false, false, null);
       AMQP.BasicProperties props = new AMQP.BasicProperties
           .Builder()
           .correlationId(corrId)

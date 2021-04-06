@@ -9,6 +9,7 @@ import org.javatuples.Pair;
 public class RMIProcessor implements Runnable {
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;
+  private final boolean DURABLE = true;
   private Connection conn;
 
   private String QUEUE_NAME;
@@ -25,7 +26,7 @@ public class RMIProcessor implements Runnable {
   public void run() {
     try {
       final Channel channel = conn.createChannel();
-      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+      channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
       channel.queuePurge(QUEUE_NAME);
       channel.basicQos(1);
 

@@ -17,6 +17,7 @@ public class PurchasesMicroService {
   private static final String HOST = "RABBIT_HOST";
   private static final String FILE_PATH = "/home/ec2-user/purchase/config.properties";
   private static final boolean isLocal = false;
+  private static final boolean DURABLE = true;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
@@ -41,8 +42,8 @@ public class PurchasesMicroService {
     try {
       conn = factory.newConnection(dbWriterPool);
       channel = conn.createChannel();
-      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
-      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT, DURABLE);
+      channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
       for (int i=0; i < 500; i++) {

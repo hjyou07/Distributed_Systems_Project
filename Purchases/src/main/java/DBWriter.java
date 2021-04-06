@@ -9,6 +9,7 @@ import java.sql.SQLException;
 public class DBWriter implements Runnable {
   private Connection conn;
   private String QUEUE_NAME;
+  private final boolean DURABLE = true;
 
   public DBWriter(Connection conn, String QUEUE_NAME) {
     this.conn = conn;
@@ -27,7 +28,7 @@ public class DBWriter implements Runnable {
       autoDelete - true if we are declaring an autodelete queue (server will delete it when no longer in use)
       arguments - other properties (construction arguments) for the queue
      */
-     channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+     channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
      // max one message per receiver
      channel.basicQos(1);
 

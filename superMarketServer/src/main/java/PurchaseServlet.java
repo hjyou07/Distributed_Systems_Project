@@ -33,6 +33,7 @@ public class PurchaseServlet extends HttpServlet {
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
   private final boolean isLocal = false;
+  private final boolean DURABLE = true;
 
     public class ChannelFactory extends BasePooledObjectFactory<Channel> {
       /**
@@ -74,7 +75,7 @@ public class PurchaseServlet extends HttpServlet {
       // TODO 4.1: create a dummy channel
       dummychannel = channelPool.borrowObject();
       // TODO 4.2: declare exchange: fanout
-      dummychannel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+      dummychannel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT, DURABLE);
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);

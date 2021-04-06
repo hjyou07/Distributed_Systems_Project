@@ -130,7 +130,7 @@ public class Client {
             break;
           case 2:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
-            validateServerAddr(serverAddress);
+            //validateServerAddr(serverAddress);
             break;
         }
       }

@@ -12,6 +12,7 @@ public class DataProcessor implements Runnable {
   private Connection conn;
   private String QUEUE_NAME;
   private int[][] itemByStore;
+  private final boolean DURABLE = true;
 
   public DataProcessor(Connection conn, String QUEUE_NAME, int[][] cache) {
     this.conn = conn;
@@ -23,7 +24,7 @@ public class DataProcessor implements Runnable {
   public void run() {
     try {
       final Channel channel = conn.createChannel();
-      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+      channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
       channel.basicQos(1);
 
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
