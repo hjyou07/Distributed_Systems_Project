@@ -15,7 +15,7 @@ public class PurchasesMicroService {
   private static final String USERNAME = "RABBIT_USERNAME";
   private static final String PASSWORD = "RABBIT_PASSWORD";
   private static final String HOST = "RABBIT_HOST";
-  private static final String FILE_PATH = "/Users/heej/Desktop/Spring2021/BSDS/Project/Purchases/src/main/resources/config.properties";
+  private static final String FILE_PATH = "/home/ec2-user/purchase/config.properties";
   private static final boolean isLocal = false;
 
   public static void main(String[] argv) throws Exception {
@@ -33,7 +33,7 @@ public class PurchasesMicroService {
         throw e;
       }
     }
-    ExecutorService dbWriterPool = Executors.newFixedThreadPool(400);
+    ExecutorService dbWriterPool = Executors.newFixedThreadPool(500);
 
 
     Connection conn = null;
@@ -45,7 +45,7 @@ public class PurchasesMicroService {
       channel.queueDeclare(QUEUE_NAME, false, false, false, null);
       channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
       System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-      for (int i=0; i < 65; i++) {
+      for (int i=0; i < 500; i++) {
         dbWriterPool.execute(new DBWriter(conn, QUEUE_NAME));
       }
     } catch (Exception e) {

@@ -16,7 +16,7 @@ public class StoreMicroService {
   private static final String USERNAME = "RABBIT_USERNAME";
   private static final String PASSWORD = "RABBIT_PASSWORD";
   private static final String HOST = "RABBIT_HOST";
-  private static final String FILE_PATH = "/Users/heej/Desktop/Spring2021/BSDS/Project/Purchases/src/main/resources/config.properties";
+  private static final String FILE_PATH = "/home/ec2-user/store/config.properties";
   private static final boolean isLocal = false;
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;

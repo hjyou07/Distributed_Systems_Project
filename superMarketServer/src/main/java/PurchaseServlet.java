@@ -32,7 +32,7 @@ public class PurchaseServlet extends HttpServlet {
   private final String USERNAME = System.getProperty("RABBIT_USERNAME");
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
-  private final boolean isLocal = true;
+  private final boolean isLocal = false;
 
     public class ChannelFactory extends BasePooledObjectFactory<Channel> {
       /**

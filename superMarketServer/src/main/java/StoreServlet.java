@@ -35,6 +35,7 @@ public class StoreServlet extends HttpServlet {
   private final String USERNAME = System.getProperty("RABBIT_USERNAME");
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
+  private final boolean isLocal = false;
 
   public class ChannelFactory extends BasePooledObjectFactory<Channel> {
 
@@ -63,7 +64,6 @@ public class StoreServlet extends HttpServlet {
 
   public void init() throws ServletException {
     factory = new ConnectionFactory();
-    boolean isLocal = true;
     if (isLocal) {
       factory.setHost("localhost");
     } else {

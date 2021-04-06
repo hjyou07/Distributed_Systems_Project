@@ -28,7 +28,7 @@ public class Store implements Runnable {
   private int numPurchases = 300; // number of purchases per hour
   private int numPurchaseItems = 5; // number of items for each purchase between 1 ~ 20
   private String date = "20210101"; // string representation of date
-  private String serverAddress = "http://localhost:8080/superMarketServer_war_exploded"; // default value for me
+  private String serverAddress; // default value for me
 
   // 2. Modify Store to produce Response object and put it in two buffers(csv writing, and stat analysis)
   public Store(int storeID, BlockingQueue csvBuffer, BlockingQueue preprocessBuffer,
