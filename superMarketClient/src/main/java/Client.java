@@ -21,7 +21,7 @@ public class Client {
   private static long threadStartTime;
   private static long threadEndTime;
 
-  private final static String SERVER_IP = "34.199.151.181";
+  private final static String SERVER_IP = "elb-450862933.us-east-1.elb.amazonaws.com";
 
   public static void main(String[] args) throws InterruptedException, InvalidArgumentException {
     // TODO: Read in the parameters

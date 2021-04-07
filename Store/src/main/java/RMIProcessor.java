@@ -9,8 +9,8 @@ import org.javatuples.Pair;
 public class RMIProcessor implements Runnable {
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;
-  private final boolean DURABLE = true;
-  private final int PERSISTENT = 2;
+  private final boolean DURABLE = false;
+  private final int PERSISTENT = 1;
   private Connection conn;
 
   private String QUEUE_NAME;

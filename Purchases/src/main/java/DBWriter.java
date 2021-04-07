@@ -9,7 +9,7 @@ import java.sql.SQLException;
 public class DBWriter implements Runnable {
   private Connection conn;
   private String QUEUE_NAME;
-  private final boolean DURABLE = true;
+  private final boolean DURABLE = false;
 
   public DBWriter(Connection conn, String QUEUE_NAME) {
     this.conn = conn;

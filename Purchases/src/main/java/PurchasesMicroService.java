@@ -17,7 +17,7 @@ public class PurchasesMicroService {
   private static final String HOST = "RABBIT_HOST";
   private static final String FILE_PATH = "/home/ec2-user/purchase/config.properties";
   private static final boolean isLocal = false;
-  private static final boolean DURABLE = true;
+  private static final boolean DURABLE = false;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();

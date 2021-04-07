@@ -20,7 +20,7 @@ public class StoreMicroService {
   private static final boolean isLocal = false;
   private static final int NUM_ITEMS = 100000;
   private static final int NUM_STORES = 512;
-  private static final boolean DURABLE = true;
+  private static final boolean DURABLE = false;
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();

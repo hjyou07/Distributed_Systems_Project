@@ -12,7 +12,7 @@ public class DataProcessor implements Runnable {
   private Connection conn;
   private String QUEUE_NAME;
   private int[][] itemByStore;
-  private final boolean DURABLE = true;
+  private final boolean DURABLE = false;
 
   public DataProcessor(Connection conn, String QUEUE_NAME, int[][] cache) {
     this.conn = conn;

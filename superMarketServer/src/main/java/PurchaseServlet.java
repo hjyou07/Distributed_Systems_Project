@@ -34,7 +34,7 @@ public class PurchaseServlet extends HttpServlet {
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
   private final boolean isLocal = false;
-  private final boolean DURABLE = true;
+  private final boolean DURABLE = false;
 
     public class ChannelFactory extends BasePooledObjectFactory<Channel> {
       /**
@@ -142,7 +142,7 @@ public class PurchaseServlet extends HttpServlet {
     try {
       channel = channelPool.borrowObject();
       // TODO 3.2: publish to the exchange
-      channel.basicPublish(EXCHANGE_NAME, "", MessageProperties.PERSISTENT_TEXT_PLAIN, reqBody.getBytes("UTF-8"));
+      channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
       // System.out.println(reqBody);
       // System.out.println("publish to exchange successful");
       res.setStatus(HttpServletResponse.SC_CREATED);

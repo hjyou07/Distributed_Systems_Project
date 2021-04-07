@@ -36,8 +36,8 @@ public class StoreServlet extends HttpServlet {
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
   private final boolean isLocal = false;
-  private final boolean DURABLE = true;
-  private final int PERSISTENT = 2;
+  private final boolean DURABLE = false;
+  private final int PERSISTENT = 1;
 
   public class ChannelFactory extends BasePooledObjectFactory<Channel> {
 
