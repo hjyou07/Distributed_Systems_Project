@@ -1,4 +1,10 @@
+import Consumer.Preprocessor;
+import Consumer.RecordWriter;
+import Model.Response;
+import Producer.Store;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,18 +18,17 @@ public class Client {
   private static int numPurchases;
   private static int numPurchaseItems;
 
-  private static PurchaseCounter purchaseCounter;
-  private static PurchaseCounter badPurchaseCounter;
   private static long threadStartTime;
   private static long threadEndTime;
+
+  private final static String SERVER_IP = "elb-450862933.us-east-1.elb.amazonaws.com";
 
   public static void main(String[] args) throws InterruptedException, InvalidArgumentException {
     // TODO: Read in the parameters
     parseArgs(args);
-    // create the global counter
-    // TODO: Avoid doing this in part 2
-    purchaseCounter = new PurchaseCounter();
-    badPurchaseCounter = new PurchaseCounter();
+    // create two buffers for producer-consumer
+    BlockingQueue<Response> csvBuffer = new LinkedBlockingQueue();
+    BlockingQueue<Response> preprocessBuffer = new LinkedBlockingQueue();
     // create latch to pass it into every store thread
     CountDownLatch centralPhaseSignal = new CountDownLatch(PHASE_BARRIER);
     CountDownLatch westPhaseSignal = new CountDownLatch(PHASE_BARRIER);
@@ -33,10 +38,10 @@ public class Client {
     int centralStores = maxStores/4;
     int westStores = maxStores/2;
 
-    // create runnables and assign storeID
+    // create store threads(producer) and assign storeID
     Store[] storeThreads = new Store[maxStores];
     for (int i=0; i < maxStores; i++) {
-      storeThreads[i] = new Store(i,purchaseCounter, badPurchaseCounter, centralPhaseSignal,westPhaseSignal,closeSignal);
+      storeThreads[i] = new Store(i+1, csvBuffer, preprocessBuffer, centralPhaseSignal,westPhaseSignal,closeSignal);
       if (date != null && serverAddress != null) {
         storeThreads[i].setServerAddress(serverAddress);
         storeThreads[i].setDate(date);
@@ -49,9 +54,20 @@ public class Client {
       }
     }
 
+    // create consumers
+    RecordWriter csvWriter = new RecordWriter(csvBuffer);
+    Preprocessor preprocessor = new Preprocessor(preprocessBuffer);
+
     // note the indices of the starting store of each phase
     int firstCentralStore = eastStores;
     int firstWestStore = eastStores + centralStores;
+
+    // start the consumers (I think it makes sense to start consumers before we start producers,
+    // as they will just block until something comes in the queue)
+    Thread csvWriterThread = new Thread(csvWriter);
+    Thread preprocessorThread = new Thread(preprocessor);
+    csvWriterThread.start();
+    preprocessorThread.start();
 
     // take timestamp
     threadStartTime = System.currentTimeMillis();
@@ -74,7 +90,20 @@ public class Client {
     closeSignal.await();
     // take timestamp
     threadEndTime = System.currentTimeMillis();
-    System.out.println(report());
+    // make sure to feed in the exit signal to the buffer
+    Response exitResponse = new Response(0,0,"EXIT",0);
+    csvBuffer.put(exitResponse);
+    preprocessBuffer.put(exitResponse);
+    try {
+      csvWriterThread.join();
+      preprocessorThread.join();
+    } catch (InterruptedException e) {
+      System.err.println("Consumer threads were interrupted");
+    }
+    // TODO: Should I externally pass in a LatencyBucket object instead of creating it within?
+    DataProcessor dataProcessor = new DataProcessor(preprocessor.getLatencyBucket());
+    System.out.println(report(dataProcessor));
+    //dataProcessor.printCounterBucket();
   }
 
   private static void parseArgs(String[] args) throws InvalidArgumentException {
@@ -101,7 +130,7 @@ public class Client {
             break;
           case 2:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
-            validateServerAddr(serverAddress);
+            //validateServerAddr(serverAddress);
             break;
         }
       }
@@ -135,7 +164,7 @@ public class Client {
             break;
           case 6:
             serverAddress = "http://".concat(args[i]).concat("/superMarketServer_war");
-            validateServerAddr(serverAddress);
+            //validateServerAddr(serverAddress);
             break;
         }
       }
@@ -165,31 +194,26 @@ public class Client {
     Matcher m = r.matcher(address);
 //    System.out.println(r.toString());
 //    System.out.println(m.matches());
-    if (!(m.matches() || address.contains("localhost"))) {
+    if (!(m.matches() || address.contains("localhost") || address.equals(SERVER_IP))) {
       throw new InvalidArgumentException();
     }
   }
 
   // TODO: check date format
 
-  private static String report() {
+  private static String report(DataProcessor dataProcessor) {
+    long wallTime;
     StringBuilder reportBuilder = new StringBuilder();
     reportBuilder.append("number of stores: " + maxStores);
-    reportBuilder.append("\ntotal number of successful requests: " + purchaseCounter.getCount());
-    // TODO: Figure out a way to keep track of number of requests
-    reportBuilder.append("\ntotal number of unsuccessful requests: " + (badPurchaseCounter.getCount()));
-    reportBuilder.append("\ntotal wall time (sec): " + calculateWallTime());
-    reportBuilder.append("\nthroughput (requests/sec): " + calculateThroughput(purchaseCounter.getCount(), calculateWallTime()));
+    reportBuilder.append("\ntotal number of successful requests: " + dataProcessor.getSuccess());
+    reportBuilder.append("\ntotal number of unsuccessful requests: " + dataProcessor.getFailure());
+    reportBuilder.append("\ntotal wall time (sec): " + (wallTime = dataProcessor.calculateWallTime(threadStartTime, threadEndTime)));
+    reportBuilder.append("\nthroughput (requests/sec): " + dataProcessor.calculateThroughput(wallTime));
+    reportBuilder.append("\nmean response time for POSTs (millisec): " + dataProcessor.calculateMean());
+    reportBuilder.append("\nmedian response time for POSTS (millisec): " + dataProcessor.calculateMedian());
+    reportBuilder.append("\np99 response time for POSTS (millisec): " + dataProcessor.calculateP99());
+    reportBuilder.append("\nmaximum response time for POSTS (millisec): " + dataProcessor.getMaximum());
     return reportBuilder.toString();
-  }
-
-  private static long calculateWallTime() {
-    // timestamps are in milliseconds, convert to seconds
-    return ((threadEndTime - threadStartTime) / 1000);
-  }
-
-  private static double calculateThroughput(int numRequest, long wallTime) {
-    return numRequest/wallTime;
   }
 
 }

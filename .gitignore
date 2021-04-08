@@ -5,3 +5,4 @@ java-client-generated/
 *.png
 *.sh
 *.csv
+/target
