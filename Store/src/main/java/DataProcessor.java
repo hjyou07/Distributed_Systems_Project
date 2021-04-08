@@ -1,3 +1,6 @@
+import Model.Purchase;
+import Model.PurchaseItems;
+import Model.PurchaseWrapper;
 import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -64,7 +67,7 @@ public class DataProcessor implements Runnable {
     try {
       Purchase purchase = new Gson().fromJson(reqBody, Purchase.class);
       LocalDate parsedDate = LocalDate.parse(purchaseDate, DateTimeFormatter.BASIC_ISO_DATE);
-      return new PurchaseWrapper(storeID, custID, parsedDate, purchase.items);
+      return new PurchaseWrapper(storeID, custID, parsedDate, purchase.getItems());
     } catch(Exception e) {
       e.printStackTrace();
       throw e;

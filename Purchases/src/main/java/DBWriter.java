@@ -1,3 +1,5 @@
+import DAL.PurchaseDao;
+import Model.Purchase;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;

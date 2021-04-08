@@ -1,3 +1,6 @@
+package Model;
+
+import Model.PurchaseItems;
 import java.time.LocalDate;
 import java.util.List;
 
