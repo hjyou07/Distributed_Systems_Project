@@ -21,4 +21,5 @@ For the third part of the contract, we made modifications to the server and data
 This microservice is designed to answer two queries:  
 1. What are the top 10 most purchased items at Store N
 1. Which are the top 5 stores for sales for item N 
-  This data structure is implemented as a 2d array synchronized for each row. When the client requests the above information, it runs an algorithm to return the result to the client via remote procedure call.
+  
+This data structure is implemented as a 2d array synchronized for each row. When the client requests the above information, it runs an algorithm to return the result to the client via remote procedure call.
