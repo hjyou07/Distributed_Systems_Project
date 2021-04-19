@@ -27,7 +27,6 @@ public class DataProcessor implements Runnable {
   public void run() {
     try {
       final Channel channel = conn.createChannel();
-      channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
       channel.basicQos(1);
 
       DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -38,6 +37,7 @@ public class DataProcessor implements Runnable {
           int storeID = purchaseInfo.getStoreID();
           List<PurchaseItems> items = purchaseInfo.getPurchaseItems();
           for (PurchaseItems i : items) {
+            //System.out.println(i.toString());
             int row = i.getItemID() - 1;
             int col = storeID - 1;
             synchronized (itemByStore[row]) {

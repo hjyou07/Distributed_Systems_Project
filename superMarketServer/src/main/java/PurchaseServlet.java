@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.servlet.ServletException;
@@ -28,8 +29,10 @@ public class PurchaseServlet extends HttpServlet {
   private Connection conn;
   private ChannelFactory channelFactory = new ChannelFactory();
   private Channel dummychannel;
+  private Channel dummychannel2;
   private ObjectPool<Channel> channelPool;
-  private final String EXCHANGE_NAME = "micro";
+  private final String PURCHASE_EXCHANGE = "purchaseX";
+  private final String STORE_EXCHANGE = "storeX";
   private final String USERNAME = System.getProperty("RABBIT_USERNAME");
   private final String PASSWORD = System.getProperty("RABBIT_PASSWORD");
   private final String HOST = System.getProperty("RABBIT_HOST");
@@ -69,6 +72,7 @@ public class PurchaseServlet extends HttpServlet {
     }
 
     dummychannel = null;
+    dummychannel2 = null;
     try {
       conn = factory.newConnection();
       // TODO 2: create a channel pool that shares a bunch of pre-created channels
@@ -76,7 +80,10 @@ public class PurchaseServlet extends HttpServlet {
       // TODO 4.1: create a dummy channel
       dummychannel = channelPool.borrowObject();
       // TODO 4.2: declare exchange: fanout
-      dummychannel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT, DURABLE);
+      dummychannel.exchangeDeclare(PURCHASE_EXCHANGE, "x-modulus-hash", DURABLE);
+      dummychannel2 = channelPool.borrowObject();
+      dummychannel2.exchangeDeclare(STORE_EXCHANGE, "x-modulus-hash", DURABLE);
+      //dummychannel2.exchangeBind(STORE_EXCHANGE, PURCHASE_EXCHANGE, "");
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
@@ -96,6 +103,13 @@ public class PurchaseServlet extends HttpServlet {
     if (dummychannel != null) {
       try {
         dummychannel.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    if (dummychannel2 != null) {
+      try {
+        dummychannel2.close();
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -142,7 +156,8 @@ public class PurchaseServlet extends HttpServlet {
     try {
       channel = channelPool.borrowObject();
       // TODO 3.2: publish to the exchange
-      channel.basicPublish(EXCHANGE_NAME, "", null, reqBody.getBytes("UTF-8"));
+      channel.basicPublish(PURCHASE_EXCHANGE, String.valueOf(ThreadLocalRandom.current().nextInt(1,1000)), null, reqBody.getBytes("UTF-8"));
+      channel.basicPublish(STORE_EXCHANGE, String.valueOf(ThreadLocalRandom.current().nextInt(1,1000)), null, reqBody.getBytes("UTF-8"));
       // System.out.println(reqBody);
       // System.out.println("publish to exchange successful");
       res.setStatus(HttpServletResponse.SC_CREATED);

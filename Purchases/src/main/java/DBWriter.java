@@ -23,15 +23,6 @@ public class DBWriter implements Runnable {
     Channel channel = null;
    try {
      channel = conn.createChannel();
-     /* queueDeclare() parameters
-      queue - the name of the queue
-      durable - true if we are declaring a durable queue (the queue will survive a server restart)
-      exclusive - true if we are declaring an exclusive queue (restricted to this connection)
-      autoDelete - true if we are declaring an autodelete queue (server will delete it when no longer in use)
-      arguments - other properties (construction arguments) for the queue
-     */
-     channel.queueDeclare(QUEUE_NAME, DURABLE, false, false, null);
-     // max one message per receiver
      channel.basicQos(1);
 
      ChannelConsumer consumer = new ChannelConsumer(channel);
