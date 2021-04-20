@@ -1,3 +1,4 @@
+import DAL.DynamoDao;
 import DAL.PurchaseDao;
 import Model.Purchase;
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -57,11 +58,11 @@ public class DBWriter implements Runnable {
       Purchase purchase = readRequestBody(message);
       // TODO 2: Send ack once write to the db succeeds.
       try {
-        PurchaseDao dao = new PurchaseDao();
+        DynamoDao dao = new DynamoDao();
         dao.createPurchaseInDB(purchase);
         // b: false indicates to ack just the supplied delivery tag
         getChannel().basicAck(envelope.getDeliveryTag(), false);
-      } catch (SQLException e) {
+      } catch (Exception e) {
         e.printStackTrace();
         // b: true indicates requeueing
         getChannel().basicReject(envelope.getDeliveryTag(), true);

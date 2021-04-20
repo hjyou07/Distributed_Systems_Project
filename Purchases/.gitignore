@@ -2,5 +2,4 @@
 *.iml
 target/
 resources/
-*.java
 .idea
