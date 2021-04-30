@@ -157,7 +157,7 @@ public class PurchaseServlet extends HttpServlet {
       channel = channelPool.borrowObject();
       // TODO 3.2: publish to the exchange
       channel.basicPublish(PURCHASE_EXCHANGE, String.valueOf(ThreadLocalRandom.current().nextInt(1,1000)), null, reqBody.getBytes("UTF-8"));
-      channel.basicPublish(STORE_EXCHANGE, String.valueOf(ThreadLocalRandom.current().nextInt(1,1000)), null, reqBody.getBytes("UTF-8"));
+      //channel.basicPublish(STORE_EXCHANGE, String.valueOf(ThreadLocalRandom.current().nextInt(1,1000)), null, reqBody.getBytes("UTF-8"));
       // System.out.println(reqBody);
       // System.out.println("publish to exchange successful");
       res.setStatus(HttpServletResponse.SC_CREATED);

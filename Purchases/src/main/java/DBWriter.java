@@ -53,9 +53,9 @@ public class DBWriter implements Runnable {
     public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties,
         byte[] body) throws IOException {
       String message = new String(body, "UTF-8");
-      // TODO 1: Lift this up to the Purchase microservice (separate project)
       // now try creating the purchase POJO object from the json string
       Purchase purchase = readRequestBody(message);
+      System.out.println(":)");
       // TODO 2: Send ack once write to the db succeeds.
       try {
         DynamoDao dao = new DynamoDao();

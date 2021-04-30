@@ -31,4 +31,14 @@ public class Purchase {
   public String getItems() {
     return items;
   }
+
+  @Override
+  public String toString() {
+    return "Purchase{" +
+        "storeID=" + storeID +
+        ", custID=" + custID +
+        ", purchaseDate='" + purchaseDate + '\'' +
+        ", items='" + items + '\'' +
+        '}';
+  }
 }
